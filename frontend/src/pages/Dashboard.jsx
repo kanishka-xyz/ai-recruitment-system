@@ -2,12 +2,12 @@ import { Box } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
-import SearchSource from "../components/SearchSource";
-import UploadJD from "../components/UploadJD";
-import JDAnalysis from "../components/JDAnalysis";
-import API from "../services/api";
+import Sidebar from "../components/Sidebar.jsx";
+import Header from "../components/Header.jsx";
+import SearchSource from "../components/SearchSource.jsx";
+import UploadJD from "../components/UploadJD.jsx";
+import JDAnalysis from "../components/JDAnalysis.jsx";
+import API from "../services/api.js";
 
 function Dashboard() {
   const navigate = useNavigate();
