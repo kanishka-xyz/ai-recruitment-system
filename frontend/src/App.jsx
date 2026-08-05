@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Dashboard from "./pages/Dashboard";
 import Results from "./pages/Results";
-import CandidateDetails from "./pages/CandidateDetails";
+import CandidateDetails from "./pages/candidateDetails.jsx";
 
 function App() {
   return (
