@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 
-import { exportCandidatesToExcel } from "../utils/exportCandidates.js";
+import { exportCandidatesToExcel } from "../utils/exportcandidates.js";
 
 import {
   Box,
@@ -26,7 +26,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import JDAnalysis from "../components/JDAnalysis.jsx";
-import CandidateTable from "../components/CandidateTable.jsx";
+import CandidateTable from "../components/candidateTable.jsx";
 
 
 function StatCard({ title, value, icon }) {

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar.jsx";
 import Header from "../components/Header.jsx";
 import SearchSource from "../components/SearchSource.jsx";
-import UploadJD from "../components/UploadJD.jsx";
+import UploadJD from "../components/uploadJD.jsx";
 import JDAnalysis from "../components/JDAnalysis.jsx";
 import API from "../services/api.js";
 
