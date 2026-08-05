@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@mui/icons-material": "^9.2.0",
+    "@mui/material": "^9.2.0",
+    "@mui/x-data-grid": "^9.10.0",
+    "swagger-editor": "^5.0.0-alpha.124"
+  }
+}
