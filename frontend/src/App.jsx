@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Dashboard from "./pages/Dashboard";
-import Results from "./pages/Results";
+import Dashboard from "./pages/Dashboard.jsx";
+import Results from "./pages/Results.jsx";
 import CandidateDetails from "./pages/candidateDetails.jsx";
 
 function App() {

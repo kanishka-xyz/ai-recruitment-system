@@ -29,7 +29,7 @@ import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 
 import { useLocation, useNavigate } from "react-router-dom";
 
-import JDAnalysis from "../components/JDAnalysis";
+import JDAnalysis from "../components/JDAnalysis.jsx";
 
 
 function CandidateAnalysis() {
