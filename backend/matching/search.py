@@ -404,10 +404,7 @@ def search_candidates(jd_json):
 
     results.sort(
         key=lambda candidate: float(
-            candidate.get(
-                "overall_score",
-                0
-            )
+             candidate.get("overall_score") or 0
         ),
         reverse=True
     )
