@@ -6,7 +6,7 @@ load_dotenv()
 
 client = InferenceClient(
     provider="hf-inference",
-    api_key=os.environ["HF_TOKEN"],
+    api_key=os.environ["HF_TOKEN"].strip(),
 )
 
 def get_embedding(text):
