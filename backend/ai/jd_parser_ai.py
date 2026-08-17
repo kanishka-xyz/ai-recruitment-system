@@ -23,7 +23,7 @@ print("API Key:", api_key[:15] + "********")
 
 client = genai.Client(api_key=api_key)
 
-MODEL_NAME = "gemini-flash-latest"
+MODEL_NAME = "gemini-2.5-flash"
 
 # ---------------------------------------------------
 # Parse Job Description
