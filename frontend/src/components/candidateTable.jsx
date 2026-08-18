@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Chip,
-  LinearProgress,
   Paper,
   Table,
   TableBody,
@@ -24,11 +23,10 @@ import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 
 import { useNavigate } from "react-router-dom";
 
+import ScoreSeal from "./ScoreSeal.jsx";
+import { colors, mono, scoreTier } from "../theme/theme.js";
 
-function CandidateTable({
-  candidates = [],
-  analysis = {},
-}) {
+function CandidateTable({ candidates = [], analysis = {} }) {
   const navigate = useNavigate();
 
   // =====================================================
@@ -37,122 +35,51 @@ function CandidateTable({
 
   if (!candidates.length) {
     return (
-      <Box
-        sx={{
-          py: 6,
-          textAlign: "center",
-        }}
-      >
-        <Typography
-          variant="h6"
-          color="text.secondary"
-        >
-          No candidates found.
+      <Box sx={{ py: 7, textAlign: "center" }}>
+        <Typography sx={{ fontFamily: mono, fontSize: 12, letterSpacing: "0.08em", color: colors.slateFaint }}>
+          NO MATCHES FOUND
+        </Typography>
+        <Typography variant="h6" sx={{ mt: 1, color: colors.ink, fontFamily: "'Fraunces', serif" }}>
+          No candidates in this case file yet.
         </Typography>
       </Box>
     );
   }
 
-  // =====================================================
-  // RECOMMENDATION COLOR
-  // =====================================================
-
-  const getChipColor = (recommendation) => {
+  const getChipStyle = (recommendation) => {
     switch (recommendation) {
       case "Highly Recommended":
-        return "success";
-
+        return { bgcolor: colors.tealSoft, color: colors.teal };
       case "Recommended":
-        return "primary";
-
+        return { bgcolor: colors.brassSoft, color: colors.brassDark };
       case "Consider":
-        return "warning";
-
+        return { bgcolor: colors.amberSoft, color: colors.amber };
       default:
-        return "error";
+        return { bgcolor: colors.crimsonSoft, color: colors.crimson };
     }
   };
-
-  // =====================================================
-  // UI
-  // =====================================================
 
   return (
     <TableContainer
       component={Paper}
       elevation={0}
-      sx={{
-        borderRadius: 3,
-        border: "1px solid #E2E8F0",
-        overflowX: "auto",
-      }}
+      sx={{ borderRadius: 3, border: `1px solid ${colors.hairline}`, overflowX: "auto" }}
     >
-      <Table
-        sx={{ minWidth: 800 }}
-        aria-label="candidate table"
-      >
-
-        {/* ================= TABLE HEADER ================= */}
-
-        <TableHead
-          sx={{
-            bgcolor: "#F8FAFC",
-          }}
-        >
+      <Table sx={{ minWidth: 820 }} aria-label="candidate table">
+        <TableHead sx={{ bgcolor: colors.paper }}>
           <TableRow>
-
-            <TableCell sx={{ fontWeight: 700 }}>
-              Candidate
-            </TableCell>
-
-            <TableCell sx={{ fontWeight: 700 }}>
-              Experience & Education
-            </TableCell>
-
-            <TableCell sx={{ fontWeight: 700 }}>
-              Overall Fit
-            </TableCell>
-
-            <TableCell sx={{ fontWeight: 700 }}>
-              Recommendation
-            </TableCell>
-
-            <TableCell
-              sx={{
-                fontWeight: 700,
-                textAlign: "center",
-              }}
-            >
-              Action
-            </TableCell>
-
+            <TableCell sx={headCell}>Candidate</TableCell>
+            <TableCell sx={headCell}>Experience &amp; Education</TableCell>
+            <TableCell sx={{ ...headCell, textAlign: "center" }}>Fit Score</TableCell>
+            <TableCell sx={headCell}>Recommendation</TableCell>
+            <TableCell sx={{ ...headCell, textAlign: "center" }}>Dossier</TableCell>
           </TableRow>
         </TableHead>
 
-        {/* ================= TABLE BODY ================= */}
-
         <TableBody>
-
           {candidates.map((candidate, index) => {
-
-            // =================================================
-            // SCORE
-            // =================================================
-
-            const score = Number(
-              candidate.overall_score || 0
-            );
-
-            // =================================================
-            // RESUME
-            // =================================================
-
-            const resume =
-              candidate.resume || {};
-
-            // =================================================
-            // NAME
-            // =================================================
+            const score = Number(candidate.overall_score || 0);
+            const resume = candidate.resume || {};
 
             const name =
               resume.name ||
@@ -162,407 +89,176 @@ function CandidateTable({
               resume.personal_info?.name ||
               "Unknown Candidate";
 
-            // =================================================
-            // ROLE
-            // =================================================
-
             let role =
-              resume.current_role ||
-              resume.designation ||
-              resume.job_title ||
-              resume.title ||
-              "";
+              resume.current_role || resume.designation || resume.job_title || resume.title || "";
 
-            /*
-              Some resumes contain experience as an array.
-
-              If current_role is missing, take the most recent
-              experience title.
-            */
-
-            if (
-              !role &&
-              Array.isArray(resume.experience) &&
-              resume.experience.length > 0
-            ) {
+            if (!role && Array.isArray(resume.experience) && resume.experience.length > 0) {
               role =
                 resume.experience[0]?.title ||
                 resume.experience[0]?.role ||
                 resume.experience[0]?.designation ||
                 "";
             }
-
-            if (!role) {
-              role = "Candidate";
-            }
-
-            // =================================================
-            // EXPERIENCE
-            // =================================================
+            if (!role) role = "Candidate";
 
             const experienceData =
-              resume.experience_years ??
-              resume.total_experience ??
-              resume.experience;
+              resume.experience_years ?? resume.total_experience ?? resume.experience;
 
             let experience = "N/A";
-
-            if (
-              typeof experienceData === "number"
-            ) {
-              experience =
-                experienceData.toString();
-            }
-
-            else if (
-              typeof experienceData === "string"
-            ) {
+            if (typeof experienceData === "number") {
+              experience = experienceData.toString();
+            } else if (typeof experienceData === "string") {
               experience = experienceData;
+            } else if (experienceData && !Array.isArray(experienceData) && typeof experienceData === "object") {
+              experience = experienceData.years ?? experienceData.total_years ?? experienceData.duration ?? "N/A";
+            } else if (Array.isArray(experienceData)) {
+              experience = resume.experience_years ?? resume.total_experience ?? "See profile";
             }
 
-            else if (
-              experienceData &&
-              !Array.isArray(experienceData) &&
-              typeof experienceData === "object"
-            ) {
-              experience =
-                experienceData.years ??
-                experienceData.total_years ??
-                experienceData.duration ??
-                "N/A";
-            }
-
-            /*
-              If experience is an array but we don't have
-              experience_years, don't print the array.
-            */
-
-            else if (
-              Array.isArray(experienceData)
-            ) {
-              experience =
-                resume.experience_years ??
-                resume.total_experience ??
-                "See profile";
-            }
-
-            // =================================================
-            // EDUCATION
-            // =================================================
-
-            const educationData =
-              resume.education;
-
+            const educationData = resume.education;
             let education = "N/A";
-
-            if (
-              Array.isArray(educationData) &&
-              educationData.length > 0
-            ) {
-              const first =
-                educationData[0];
-
-              if (
-                typeof first === "string"
-              ) {
+            if (Array.isArray(educationData) && educationData.length > 0) {
+              const first = educationData[0];
+              if (typeof first === "string") {
                 education = first;
+              } else if (first && typeof first === "object") {
+                education = first.degree || first.course || first.qualification || first.education || "N/A";
               }
-
-              else if (
-                first &&
-                typeof first === "object"
-              ) {
-                education =
-                  first.degree ||
-                  first.course ||
-                  first.qualification ||
-                  first.education ||
-                  "N/A";
-              }
+            } else if (typeof educationData === "string") {
+              education = educationData;
+            } else if (educationData && typeof educationData === "object") {
+              education = educationData.degree || educationData.course || educationData.qualification || "N/A";
             }
 
-            else if (
-              typeof educationData === "string"
-            ) {
-              education =
-                educationData;
-            }
-
-            else if (
-              educationData &&
-              typeof educationData === "object"
-            ) {
-              education =
-                educationData.degree ||
-                educationData.course ||
-                educationData.qualification ||
-                "N/A";
-            }
-
-            // =================================================
-            // ROW
-            // =================================================
+            const chipStyle = getChipStyle(candidate.recommendation);
 
             return (
               <TableRow
-                key={
-                  resume._id ||
-                  resume.email ||
-                  `${name}-${index}`
-                }
+                key={resume._id || resume.email || `${name}-${index}`}
                 hover
                 sx={{
-                  "&:last-child td, &:last-child th":
-                    {
-                      border: 0,
-                    },
+                  "&:last-child td, &:last-child th": { border: 0 },
+                  "&:hover": { bgcolor: colors.paper },
                 }}
               >
-
-                {/* ============================================
-                    CANDIDATE
-                ============================================ */}
-
+                {/* CANDIDATE */}
                 <TableCell>
-
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    gap={1.5}
-                  >
-
+                  <Box display="flex" alignItems="center" gap={1.5}>
                     <Avatar
                       sx={{
-                        bgcolor: "#EEF2FF",
-                        color: "#4338CA",
-                        width: 42,
-                        height: 42,
+                        bgcolor: colors.brassSoft,
+                        color: colors.brassDark,
+                        width: 40,
+                        height: 40,
+                        fontFamily: "'Fraunces', serif",
+                        fontWeight: 700,
                       }}
                     >
-                      <PersonRoundedIcon />
+                      {name.charAt(0)}
                     </Avatar>
-
                     <Box>
-
-                      <Typography
-                        variant="subtitle2"
-                        fontWeight={700}
-                        color="#0F172A"
-                      >
+                      <Typography variant="subtitle2" fontWeight={700} color={colors.ink}>
                         {name}
                       </Typography>
-
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                      >
+                      <Typography variant="caption" sx={{ color: colors.slate }} display="block">
                         {role}
                       </Typography>
-
                     </Box>
-
                   </Box>
-
                 </TableCell>
 
-                {/* ============================================
-                    EXPERIENCE + EDUCATION
-                ============================================ */}
-
+                {/* EXPERIENCE + EDUCATION */}
                 <TableCell>
-
-                  <Box
-                    display="flex"
-                    flexDirection="column"
-                    gap={0.7}
-                    alignItems="flex-start"
-                  >
-
+                  <Box display="flex" flexDirection="column" gap={0.7} alignItems="flex-start">
                     <Chip
                       size="small"
-                      icon={
-                        <WorkRoundedIcon />
-                      }
+                      icon={<WorkRoundedIcon sx={{ fontSize: "15px !important" }} />}
                       label={
-                        experience ===
-                        "See profile"
+                        experience === "See profile"
                           ? "Experience available"
                           : experience === "N/A"
                           ? "Experience N/A"
                           : `${experience} Years`
                       }
                       variant="outlined"
+                      sx={{ borderColor: colors.hairline, color: colors.slate, fontWeight: 600 }}
                     />
-
-                    <Tooltip
-                      title={education}
-                      placement="top"
-                    >
-
+                    <Tooltip title={education} placement="top">
                       <Chip
                         size="small"
-                        icon={
-                          <SchoolRoundedIcon />
-                        }
-                        label={
-                          education.length > 24
-                            ? `${education.substring(
-                                0,
-                                24
-                              )}...`
-                            : education
-                        }
+                        icon={<SchoolRoundedIcon sx={{ fontSize: "15px !important" }} />}
+                        label={education.length > 24 ? `${education.substring(0, 24)}...` : education}
                         variant="outlined"
+                        sx={{ borderColor: colors.hairline, color: colors.slate, fontWeight: 600 }}
                       />
-
                     </Tooltip>
-
                   </Box>
-
                 </TableCell>
 
-                {/* ============================================
-                    OVERALL FIT
-                ============================================ */}
-
-                <TableCell
-                  sx={{
-                    minWidth: 140,
-                  }}
-                >
-
-                  <Typography
-                    variant="body2"
-                    fontWeight={700}
-                    color="primary"
-                  >
-                    {score.toFixed(0)}%
-                  </Typography>
-
-                  <LinearProgress
-                    variant="determinate"
-                    value={Math.min(
-                      Math.max(score, 0),
-                      100
-                    )}
-                    sx={{
-                      mt: 0.7,
-                      height: 6,
-                      borderRadius: 3,
-                    }}
-                  />
-
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                  >
-                    Contextual fit
-                  </Typography>
-
+                {/* FIT SCORE — signature element */}
+                <TableCell sx={{ minWidth: 100 }}>
+                  <Box display="flex" justifyContent="center">
+                    <ScoreSeal score={score} size={52} showLabel={false} />
+                  </Box>
                 </TableCell>
 
-                {/* ============================================
-                    RECOMMENDATION
-                ============================================ */}
-
+                {/* RECOMMENDATION */}
                 <TableCell>
-
                   <Chip
                     size="small"
-                    label={
-                      candidate.recommendation ||
-                      "N/A"
-                    }
-                    color={getChipColor(
-                      candidate.recommendation
-                    )}
-                    sx={{
-                      fontWeight: 600,
-                    }}
+                    label={candidate.recommendation || "N/A"}
+                    sx={{ ...chipStyle, fontWeight: 700 }}
                   />
-
                   {candidate.confidence && (
                     <Typography
-                      variant="caption"
-                      color="text.secondary"
+                      sx={{ mt: 0.5, fontFamily: mono, fontSize: "0.66rem", color: colors.slateFaint }}
                       display="block"
-                      sx={{ mt: 0.5 }}
                     >
-                      Confidence:{" "}
-                      {candidate.confidence}
+                      CONFIDENCE: {candidate.confidence}
                     </Typography>
                   )}
-
                 </TableCell>
 
-                {/* ============================================
-                    VIEW
-                ============================================ */}
-
+                {/* VIEW */}
                 <TableCell align="center">
-
                   <Button
                     size="small"
-                    variant="contained"
-                    startIcon={
-                      <VisibilityRoundedIcon />
-                    }
+                    variant="outlined"
+                    startIcon={<VisibilityRoundedIcon />}
                     onClick={() => {
-
-                      console.log(
-                        "========== CANDIDATE =========="
-                      );
-
-                      console.log(
-                        "Candidate:",
-                        candidate
-                      );
-
-                      console.log(
-                        "Resume:",
-                        candidate.resume
-                      );
-
-                      console.log(
-                        "JD Analysis:",
-                        analysis
-                      );
-
-                      navigate(
-                        "/candidate",
-                        {
-                          state: {
-                            ...candidate,
-
-                            // IMPORTANT:
-                            // candidate page now gets JD
-                            job_analysis:
-                              analysis,
-                          },
-                        }
-                      );
+                      navigate("/candidate", {
+                        state: { ...candidate, job_analysis: analysis },
+                      });
                     }}
                     sx={{
                       whiteSpace: "nowrap",
-                      textTransform: "none",
-                      borderRadius: 2,
+                      borderRadius: 1.5,
+                      borderColor: colors.hairlineStrong,
+                      color: colors.ink,
+                      fontWeight: 700,
+                      "&:hover": { borderColor: colors.brass, bgcolor: colors.brassSoft },
                     }}
                   >
-                    View Analysis
+                    View
                   </Button>
-
                 </TableCell>
-
               </TableRow>
             );
           })}
-
         </TableBody>
-
       </Table>
     </TableContainer>
   );
 }
+
+const headCell = {
+  fontFamily: mono,
+  fontSize: "0.7rem",
+  fontWeight: 700,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: colors.slateFaint,
+  borderBottom: `1px solid ${colors.hairline}`,
+};
 
 export default CandidateTable;

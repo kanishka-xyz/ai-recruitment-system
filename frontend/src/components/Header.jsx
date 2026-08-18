@@ -1,86 +1,138 @@
 import React from "react";
 import {
-  Box,
+  AppBar,
+  Toolbar,
   TextField,
   Button,
   InputAdornment,
   Stack,
+  IconButton,
+  Avatar,
+  Badge,
+  Divider,
+  Typography,
+  Box,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
+import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
+
+import { colors, mono } from "../theme/theme.js";
 
 function Header() {
   return (
-    <Box
+    <AppBar
+      position="sticky"
+      elevation={0}
       sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between", // Pushes search to left and actions to far right
-        px: 3,
-        py: 2,
-        bgcolor: "#ffffff",
-        borderBottom: "1px solid #e2e8f0",
-        width: "100%",
-        boxSizing: "border-box",
+        bgcolor: colors.paperRaised,
+        borderBottom: `1px solid ${colors.hairline}`,
+        color: colors.ink,
       }}
     >
-      {/* Left Side: Search Input */}
-      <TextField
-        placeholder="Search candidates, JDs, skills..."
-        variant="outlined"
-        size="small"
-        sx={{
-          width: 350,
-          "& .MuiOutlinedInput-root": {
-            borderRadius: "20px",
-            bgcolor: "#f8fafc",
-          },
-        }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon sx={{ color: "#94a3b8" }} />
-            </InputAdornment>
-          ),
-        }}
-      />
-
-      {/* Right Side: Create JD & Recruiter controls */}
-      <Stack direction="row" spacing={2} alignItems="center" sx={{ ml: "auto" }}>
-        <Button
-          variant="contained"
-          disableElevation
-          startIcon={<AddIcon />}
+      <Toolbar sx={{ justifyContent: "space-between", px: { xs: 2, sm: 3 }, minHeight: "72px !important" }}>
+        {/* Search */}
+        <TextField
+          placeholder="Search candidates, JDs, skills…"
+          variant="outlined"
+          size="small"
           sx={{
-            bgcolor: "#5046e5",
-            color: "#ffffff",
-            borderRadius: "20px",
-            textTransform: "none",
-            px: 2.5,
-            py: 1,
-            fontWeight: 600,
-            "&:hover": {
-              bgcolor: "#4338ca",
+            width: { xs: 220, sm: 320, md: 380 },
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "8px",
+              bgcolor: colors.paper,
+              fontSize: "0.875rem",
+              fontFamily: mono,
+              transition: "all 0.15s ease-in-out",
+              "& fieldset": { borderColor: colors.hairline },
+              "&:hover fieldset": { borderColor: colors.hairlineStrong },
+              "&.Mui-focused": {
+                bgcolor: colors.paperRaised,
+                boxShadow: `0 0 0 3px ${colors.brassSoft}`,
+                "& fieldset": { borderColor: colors.brass },
+              },
             },
           }}
-        >
-          Create JD
-        </Button>
-
-        <Button
-          endIcon={<KeyboardArrowDownIcon />}
-          sx={{
-            color: "#1e293b",
-            textTransform: "none",
-            fontWeight: 600,
-            fontSize: "0.95rem",
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: colors.slateFaint, fontSize: 19 }} />
+              </InputAdornment>
+            ),
           }}
-        >
-          Recruiter
-        </Button>
-      </Stack>
-    </Box>
+        />
+
+        {/* Actions */}
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          <Button
+            variant="contained"
+            disableElevation
+            startIcon={<AddRoundedIcon />}
+            sx={{
+              bgcolor: colors.ink,
+              color: "#F4F2EC",
+              borderRadius: "8px",
+              px: 2.25,
+              py: 0.9,
+              fontSize: "0.85rem",
+              fontWeight: 700,
+              "&:hover": { bgcolor: colors.inkSoft },
+            }}
+          >
+            Create JD
+          </Button>
+
+          <IconButton
+            size="small"
+            sx={{
+              color: colors.slate,
+              p: 1,
+              borderRadius: "8px",
+              border: `1px solid ${colors.hairline}`,
+              "&:hover": { bgcolor: colors.paper, color: colors.ink },
+            }}
+          >
+            <Badge variant="dot" sx={{ "& .MuiBadge-dot": { bgcolor: colors.crimson } }}>
+              <NotificationsNoneRoundedIcon fontSize="small" />
+            </Badge>
+          </IconButton>
+
+          <Divider orientation="vertical" flexItem sx={{ height: 24, my: "auto", mx: 0.5 }} />
+
+          {/* Recruiter identity */}
+          <Button
+            disableRipple
+            endIcon={<KeyboardArrowDownRoundedIcon sx={{ color: colors.slateFaint }} />}
+            sx={{ p: 0.5, pr: 1, borderRadius: "8px", "&:hover": { bgcolor: colors.paper } }}
+          >
+            <Stack direction="row" spacing={1.25} alignItems="center">
+              <Avatar
+                sx={{
+                  width: 34,
+                  height: 34,
+                  bgcolor: colors.brassSoft,
+                  color: colors.brassDark,
+                  fontFamily: "'Fraunces', serif",
+                  fontSize: "0.9rem",
+                  fontWeight: 700,
+                }}
+              >
+                RC
+              </Avatar>
+              <Box textAlign="left" sx={{ display: { xs: "none", md: "block" } }}>
+                <Typography variant="body2" sx={{ fontWeight: 700, color: colors.ink, lineHeight: 1.2 }}>
+                  Alex Morgan
+                </Typography>
+                <Typography sx={{ fontFamily: mono, fontSize: "0.68rem", color: colors.slateFaint, letterSpacing: "0.04em" }}>
+                  LEAD RECRUITER
+                </Typography>
+              </Box>
+            </Stack>
+          </Button>
+        </Stack>
+      </Toolbar>
+    </AppBar>
   );
 }
 

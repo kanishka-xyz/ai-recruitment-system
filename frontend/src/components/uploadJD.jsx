@@ -1,22 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import {
-  Box,
-  Typography,
-  Paper,
-  Button,
-  Divider,
-} from "@mui/material";
+import { Box, Typography, Paper, Button, Divider } from "@mui/material";
 
 import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 
 import API from "../services/api";
+import { colors, mono } from "../theme/theme.js";
 
 function UploadJD({ jd, setJd, handleFind }) {
   const [selectedFile, setSelectedFile] = useState(null);
-   // Debugging line
   const navigate = useNavigate();
 
   const handleFileUpload = async () => {
@@ -29,23 +23,16 @@ function UploadJD({ jd, setJd, handleFind }) {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await API.post(
-        "/uploadJD",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      console.log(response.data);
-      navigate("/results", {
-  state: {
-    analysis: response.data.job_description,
-    candidates: response.data.candidates,
-  },
-});
+      const response = await API.post("/uploadJD", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
+      navigate("/results", {
+        state: {
+          analysis: response.data.job_description,
+          candidates: response.data.candidates,
+        },
+      });
     } catch (error) {
       console.error(error);
       alert("Failed to upload Job Description.");
@@ -53,156 +40,112 @@ function UploadJD({ jd, setJd, handleFind }) {
   };
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 3,
-        borderRadius: 3,
-        border: "1px solid #E5E7EB",
-        bgcolor: "#FFFFFF",
-      }}
-    >
+    <Paper elevation={0} sx={{ p: 0, borderRadius: 0, bgcolor: "transparent" }}>
       {/* Heading */}
-      <Typography
-        fontSize={20}
-        fontWeight={700}
-        mb={2}
-      >
-        Upload Job Description
-      </Typography>
+      <Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", mb: 2.5 }}>
+        <Box>
+          <Typography sx={eyebrow}>Case Intake</Typography>
+          <Typography sx={{ fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 600, color: colors.ink }}>
+            Open a New Requisition
+          </Typography>
+        </Box>
+      </Box>
 
-      {/* Upload Section */}
+      {/* Upload dropzone */}
       <Box
         sx={{
-          border: "2px dashed #CBD5E1",
+          border: `1.5px dashed ${colors.hairlineStrong}`,
           borderRadius: 2,
-          bgcolor: "#FAFBFF",
+          bgcolor: colors.paper,
           textAlign: "center",
-          py: 4,
-
-          "&:hover": {
-            borderColor: "#5B5CEB",
-            bgcolor: "#F7F7FF",
-          },
+          py: 4.5,
+          transition: "all 0.15s ease",
+          "&:hover": { borderColor: colors.brass, bgcolor: colors.brassSoft },
         }}
       >
-        <CloudUploadRoundedIcon
-          sx={{
-            fontSize: 45,
-            color: "#5B5CEB",
-            mb: 1,
-          }}
-        />
+        <CloudUploadRoundedIcon sx={{ fontSize: 40, color: colors.brassDark, mb: 1 }} />
 
-        <Typography fontWeight={600}>
-          Drag & Drop your Job Description
+        <Typography sx={{ fontWeight: 700, color: colors.ink }}>
+          Drag &amp; drop the job description
         </Typography>
 
-        <Typography
-          color="text.secondary"
-          fontSize={13}
-          mt={0.5}
-          mb={2}
-        >
-          or browse from your computer
+        <Typography sx={{ color: colors.slate, fontSize: 13, mt: 0.5, mb: 2 }}>
+          PDF format · or browse from your computer
         </Typography>
 
         <Button
           variant="contained"
           component="label"
+          disableElevation
           sx={{
-            textTransform: "none",
-            borderRadius: 2,
+            borderRadius: 1.5,
             px: 3,
-            bgcolor: "#5B5CEB",
-
-            "&:hover": {
-              bgcolor: "#4748D9",
-            },
+            bgcolor: colors.ink,
+            fontWeight: 700,
+            "&:hover": { bgcolor: colors.inkSoft },
           }}
         >
           Browse File
-
-          <input
-            hidden
-            type="file"
-            accept=".pdf"
-            onChange={(e) => setSelectedFile(e.target.files[0])}
-          />
+          <input hidden type="file" accept=".pdf" onChange={(e) => setSelectedFile(e.target.files[0])} />
         </Button>
 
         {selectedFile && (
-          <Typography
-            mt={2}
-            fontSize={14}
-            color="success.main"
-          >
-            Selected: {selectedFile.name}
+          <Typography sx={{ mt: 2, fontSize: 13, fontFamily: mono, color: colors.teal }}>
+            ✓ {selectedFile.name}
           </Typography>
         )}
       </Box>
 
-      <Divider sx={{ my: 3 }} />
+      <Divider sx={{ my: 3, borderColor: colors.hairline }} />
 
       {/* Paste JD */}
-      <Typography
-        fontWeight={600}
-        mb={2}
-      >
-        Or Paste Job Description
+      <Typography sx={{ fontWeight: 700, mb: 1.5, color: colors.ink, fontSize: 14 }}>
+        Or paste the job description directly
       </Typography>
 
       <Box
         component="textarea"
         value={jd}
         onChange={(e) => setJd(e.target.value)}
-        placeholder="Paste the complete Job Description here..."
+        placeholder="Paste the complete job description here…"
         sx={{
           width: "100%",
-          height: "59px",
+          minHeight: 140,
           p: 2,
-          border: "1px solid #D1D5DB",
+          border: `1px solid ${colors.hairline}`,
           borderRadius: 2,
           fontSize: "14px",
-          fontFamily: "Inter, sans-serif",
+          fontFamily: "'Manrope', sans-serif",
           lineHeight: 1.8,
           resize: "vertical",
           outline: "none",
           boxSizing: "border-box",
           overflowY: "auto",
-
+          color: colors.ink,
           "&:focus": {
-            borderColor: "#5B5CEB",
-            boxShadow: "0 0 0 3px rgba(91,92,235,0.15)",
+            borderColor: colors.brass,
+            boxShadow: `0 0 0 3px ${colors.brassSoft}`,
           },
         }}
       />
 
-      {/* Find Button */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          mt: 4,
-        }}
-      >
+      {/* Find button */}
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 3.5 }}>
         <Button
           variant="contained"
+          disableElevation
           size="large"
           startIcon={<SearchRoundedIcon />}
           onClick={selectedFile ? handleFileUpload : handleFind}
           sx={{
-            px: 6,
-            py: 1.5,
-            borderRadius: 2,
-            textTransform: "none",
-            fontSize: 16,
-            fontWeight: 600,
-            bgcolor: "#5B5CEB",
-
-            "&:hover": {
-              bgcolor: "#4748D9",
-            },
+            px: 5,
+            py: 1.4,
+            borderRadius: 1.5,
+            fontSize: 15.5,
+            fontWeight: 700,
+            bgcolor: colors.brass,
+            color: "#1B1400",
+            "&:hover": { bgcolor: colors.brassDark, color: "#fff" },
           }}
         >
           Find Candidates
@@ -211,5 +154,16 @@ function UploadJD({ jd, setJd, handleFind }) {
     </Paper>
   );
 }
+
+const eyebrow = {
+  fontFamily: mono,
+  fontSize: "0.7rem",
+  fontWeight: 700,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  color: colors.slateFaint,
+  mb: 0.5,
+  display: "block",
+};
 
 export default UploadJD;

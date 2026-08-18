@@ -2,11 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 
 import App from "./App";
-
-import theme from "./theme";
-
-import { ThemeProvider } from "@mui/material/styles";
-import { CssBaseline } from "@mui/material";
+import { ThemeProvider, CssBaseline } from "@mui/material";
+import theme from "./theme/theme.js";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
 
