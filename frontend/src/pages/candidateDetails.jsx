@@ -351,7 +351,7 @@ function CandidateDetails() {
       <Container maxWidth="lg" sx={{ px: { xs: 2, md: 3 } }}>
         <Button
           startIcon={<ArrowBackRoundedIcon />}
-          onClick={() => navigate("/results")}
+          onClick={() => navigate(-1)}
           sx={{ mb: 2, color: "#566675", fontWeight: 800, textTransform: "none" }}
         >
           Back to Search Results
