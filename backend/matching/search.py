@@ -145,6 +145,44 @@ def evaluate_candidate(candidate_data):
         result["semantic_score"] = semantic_score
 
         # ----------------------------------------------------
+        # NORMALIZE CANDIDATE IDENTITY
+        #
+        # Keep the parsed resume as the source of truth, but also
+        # expose the core identity fields at the result level.
+        # This keeps API consumers, logs and the details page
+        # consistent with the evaluated candidate.
+        # ----------------------------------------------------
+
+        result["candidate_name"] = (
+            resume.get("candidate_name")
+            or resume.get("name")
+            or resume.get("full_name")
+            or resume.get("candidate")
+            or "Unknown Candidate"
+        )
+
+        for field in (
+            "email",
+            "phone",
+            "location",
+            "current_role",
+            "current_company",
+            "total_experience_years",
+            "skills",
+            "technical_skills",
+            "education",
+            "certifications",
+            "projects",
+            "internships",
+            "achievements",
+            "resume_file",
+            "source",
+        ):
+            if result.get(field) in (None, ""):
+                if field in resume:
+                    result[field] = resume[field]
+
+        # ----------------------------------------------------
         # ATTACH ORIGINAL RESUME
         # ----------------------------------------------------
 
