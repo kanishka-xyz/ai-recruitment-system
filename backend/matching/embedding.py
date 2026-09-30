@@ -1,19 +1,12 @@
-import os
-from dotenv import load_dotenv
-from huggingface_hub import InferenceClient
+from sentence_transformers import SentenceTransformer
 
-load_dotenv()
+# Load the embedding model once when the application starts
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
-client = InferenceClient(
-    provider="hf-inference",
-    api_key=os.environ["HF_TOKEN"].strip(),
-)
 
 def get_embedding(text):
-    return client.feature_extraction(
-        text,
-        model="sentence-transformers/all-MiniLM-L6-v2",
-    )
+    return model.encode(text)
+
 
 def create_embedding(text):
     return get_embedding(text)

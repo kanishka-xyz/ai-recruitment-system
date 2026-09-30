@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from routes.search_candidates import router as search_router
 from routes.jd import router as jd_router
 from routes.generate_jd import router as generate_jd_router
+from routes.internal_database import router as internal_database_router
 
 app = FastAPI()
 
@@ -21,7 +22,8 @@ app.mount(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://ai-recruitment-system-1j6j-git-main-kanishka-guptas-projects.vercel.app"],
+    allow_origins=["http://localhost:5173",
+        "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,6 +36,9 @@ app.include_router(job_router)
 app.include_router(match_router)
 app.include_router(search_router)
 app.include_router(jd_router)
+app.include_router(
+    internal_database_router
+)
 
 app.include_router(generate_jd_router)
 

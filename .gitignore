@@ -32,3 +32,9 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+# Backend generated / uploaded files
+backend/internal_database/
+backend/uploads/
+
+# Backup archives
+*.zip

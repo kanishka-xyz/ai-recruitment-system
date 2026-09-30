@@ -1,10 +1,8 @@
+import time
 import os
-import google.generativeai as genai
+from google import genai
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-
-model = genai.GenerativeModel("gemini-3.1-flash-lite")
-
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def generate_job_description(user_prompt):
 
@@ -49,6 +47,16 @@ Do not explain anything.
 Only return the Job Description.
 """
 
-    response = model.generate_content(prompt)
+    start = time.time()
+    print("🚀 Calling Gemini...")
+
+    response = client.models.generate_content(
+        model="gemini-3.1-flash-lite",
+        contents=prompt
+    )
+
+    end = time.time()
+
+    print(f"✅ Gemini response time: {end - start:.2f} seconds")
 
     return response.text

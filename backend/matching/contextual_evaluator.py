@@ -450,113 +450,45 @@ Return ONLY the JSON object.
 """
 
     # =====================================================
-    # Call Gemini
-    # =====================================================
-
-       # =====================================================
-    # Call Gemini
+    # Call Gemini - SINGLE ATTEMPT
     # =====================================================
 
     response = None
     last_error = None
+    start_time = time.perf_counter()
 
-    MAX_RETRIES = 3
+    try:
+        print("🤖 Calling contextual Gemini...")
 
-    for attempt in range(MAX_RETRIES):
+        response = client.models.generate_content(
+            model="gemini-3.5-flash-lite",
+            contents=prompt
+        )
 
-        try:
+        elapsed = time.perf_counter() - start_time
 
-            print(
-                f"Contextual Gemini evaluation "
-                f"attempt {attempt + 1}/{MAX_RETRIES}"
+        print(
+            f"⏱️ Contextual Gemini response: "
+            f"{elapsed:.2f} sec"
+        )
+
+        if (
+            response is None
+            or not getattr(response, "text", None)
+        ):
+            raise ValueError(
+                "Gemini returned an empty response."
             )
 
-            response = client.models.generate_content(
-                model="gemini-3.6-flash",
-                contents=prompt
-            )
+    except Exception as e:
+        last_error = e
+        elapsed = time.perf_counter() - start_time
 
-            # Make sure Gemini actually returned text
-            if (
-                response is None
-                or not getattr(response, "text", None)
-            ):
-                raise ValueError(
-                    "Gemini returned an empty response."
-                )
-
-            # Success
-            break
-
-        except Exception as e:
-
-            last_error = e
-
-            error_text = str(e)
-
-            print(
-                f"Contextual evaluation attempt "
-                f"{attempt + 1}/{MAX_RETRIES} failed:"
-            )
-
-            print(error_text)
-
-            # ---------------------------------------------
-            # Temporary server overload
-            # ---------------------------------------------
-
-            is_503 = (
-                "503" in error_text
-                or "UNAVAILABLE" in error_text
-                or "high demand" in error_text.lower()
-            )
-
-            # ---------------------------------------------
-            # Quota / rate limit
-            # ---------------------------------------------
-
-            is_429 = (
-                "429" in error_text
-                or "RESOURCE_EXHAUSTED" in error_text
-                or "quota" in error_text.lower()
-            )
-
-            # ---------------------------------------------
-            # Retry only temporary failures
-            # ---------------------------------------------
-
-            if attempt < MAX_RETRIES - 1:
-
-                if is_503:
-
-                    wait_time = 5 * (attempt + 1)
-
-                    print(
-                        f"Gemini temporarily unavailable. "
-                        f"Retrying in {wait_time}s..."
-                    )
-
-                    time.sleep(wait_time)
-
-                    continue
-
-                if is_429:
-
-                    wait_time = 10 * (attempt + 1)
-
-                    print(
-                        f"Gemini quota/rate limit reached. "
-                        f"Retrying in {wait_time}s..."
-                    )
-
-                    time.sleep(wait_time)
-
-                    continue
-
-            # Don't repeatedly retry programming errors,
-            # invalid requests, malformed input, etc.
-            if not is_503 and not is_429:
-                break
+        print(
+            f"❌ Contextual Gemini failed "
+            f"after {elapsed:.2f} sec"
+        )
+        print(str(e))
 
     # =====================================================
     # Gemini unavailable

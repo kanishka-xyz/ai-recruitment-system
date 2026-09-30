@@ -1,15 +1,5 @@
-"""
-matching/search.py
-
-Candidate search pipeline:
-
-1. Fetch candidates
-2. Calculate semantic similarity locally
-3. Preselect the most relevant candidates
-4. Run full contextual evaluation on shortlisted candidates
-5. Rank by contextual overall suitability
-6. Return JSON-safe candidate data
-"""
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from sklearn.metrics.pairwise import cosine_similarity
 from bson import ObjectId
@@ -17,479 +7,702 @@ from bson import ObjectId
 from matching.embedding import create_embedding
 from matching.text_converter import resume_to_text, jd_to_text
 from matching.ranking import calculate_ranking
+from database.mongodb import resume_collection
 
-from ats.ats_service import get_candidates
 
+# ============================================================
+# JSON SAFE CONVERSION
+# ============================================================
 
-# =========================================================
-# JSON SAFE CONVERTER
-# =========================================================
+def make_json_safe(obj):
 
-def make_json_safe(value):
-    """
-    Recursively converts MongoDB/Python values into
-    values FastAPI can safely serialize.
-    """
+    if isinstance(obj, ObjectId):
+        return str(obj)
 
-    if isinstance(value, ObjectId):
-        return str(value)
-
-    if isinstance(value, dict):
+    if isinstance(obj, dict):
         return {
-            key: make_json_safe(item)
-            for key, item in value.items()
+            key: make_json_safe(value)
+            for key, value in obj.items()
         }
 
-    if isinstance(value, (list, tuple)):
+    if isinstance(obj, list):
         return [
-            make_json_safe(item)
-            for item in value
+            make_json_safe(value)
+            for value in obj
         ]
 
-    # Handles numpy scalar values if they appear
-    if hasattr(value, "item"):
+    if isinstance(obj, tuple):
+        return [
+            make_json_safe(value)
+            for value in obj
+        ]
+
+    # numpy scalar
+    if hasattr(obj, "item"):
         try:
-            return value.item()
+            return obj.item()
         except Exception:
             pass
 
-    return value
+    return obj
 
 
-# =========================================================
-# CANDIDATE SEARCH
-# =========================================================
+# ============================================================
+# FETCH CANDIDATES FROM MONGODB
+# ============================================================
+
+def get_candidates(jd_json):
+
+    """
+    Fetch resumes from MongoDB.
+
+    Currently retrieves resumes that have been processed
+    and stored in the resume collection.
+
+    JD-based filtering/ranking is handled later through
+    semantic matching and contextual evaluation.
+    """
+
+    try:
+
+        # Fetch resumes with embeddings
+        candidates = list(
+            resume_collection.find(
+                {
+                    "embedding": {
+                        "$exists": True,
+                        "$ne": None
+                    }
+                }
+            )
+        )
+
+        return candidates
+
+    except Exception as e:
+
+        print(f"❌ MongoDB candidate fetch failed: {e}")
+
+        return []
+
+
+# ============================================================
+# CONTEXTUAL EVALUATION WORKER
+# ============================================================
+
+def evaluate_candidate(candidate_data):
+
+    index = candidate_data["index"]
+    resume = candidate_data["resume"]
+    semantic_score = candidate_data["semantic_score"]
+    jd_json = candidate_data["jd_json"]
+
+    candidate_name = (
+        resume.get("candidate_name")
+        or resume.get("name")
+        or resume.get("candidate")
+        or "Unknown Candidate"
+    )
+
+    print()
+    print("-" * 70)
+    print(
+        f"Candidate {index} | {candidate_name}"
+    )
+    print("-" * 70)
+
+    start_time = time.perf_counter()
+
+    try:
+
+        # ====================================================
+        # CONTEXTUAL GEMINI EVALUATION
+        # ====================================================
+
+        result = calculate_ranking(
+            jd=jd_json,
+            resume=resume,
+            semantic_score=semantic_score
+        )
+
+        elapsed = time.perf_counter() - start_time
+
+        print(
+            f"⏱️ Contextual evaluation: "
+            f"{elapsed:.2f} sec"
+        )
+
+        if not isinstance(result, dict):
+
+            raise ValueError(
+                "calculate_ranking() did not return a dictionary"
+            )
+
+        # ----------------------------------------------------
+        # ATTACH SEMANTIC SCORE
+        # ----------------------------------------------------
+
+        result["semantic_score"] = semantic_score
+
+        # ----------------------------------------------------
+        # ATTACH ORIGINAL RESUME
+        # ----------------------------------------------------
+
+        result["resume"] = resume
+
+        # ----------------------------------------------------
+        # TIMING
+        # ----------------------------------------------------
+
+        result["_contextual_time"] = round(
+            elapsed,
+            2
+        )
+
+        print(
+            f"Overall Fit: "
+            f"{result.get('overall_score', 0)}"
+        )
+
+        print(
+            f"Recommendation: "
+            f"{result.get('recommendation', 'Under Review')}"
+        )
+
+        print(
+            f"Confidence: "
+            f"{result.get('confidence', 'Unknown')}"
+        )
+
+        return result
+
+    except Exception as e:
+
+        elapsed = time.perf_counter() - start_time
+
+        print(
+            f"❌ Contextual evaluation failed "
+            f"after {elapsed:.2f} sec"
+        )
+
+        print(
+            f"Error: {str(e)}"
+        )
+
+        # ----------------------------------------------------
+        # DO NOT INVENT A SCORE
+        # ----------------------------------------------------
+
+        return {
+            "candidate_name": candidate_name,
+            "overall_score": 0,
+            "recommendation": "Evaluation Failed",
+            "confidence": "Low",
+            "role_fit": "",
+            "reason": (
+                "Contextual evaluation could not be completed."
+            ),
+            "strengths": [],
+            "gaps": [],
+            "compensating_factors": [],
+            "critical_missing": [],
+            "factor_analysis": {},
+
+            "semantic_score": semantic_score,
+
+            "resume": resume,
+
+            "evaluation_status": "failed",
+
+            "evaluation_error": str(e),
+
+            "_contextual_time": round(
+                elapsed,
+                2
+            )
+        }
+
+
+# ============================================================
+# MAIN SEARCH FUNCTION
+# ============================================================
 
 def search_candidates(jd_json):
 
-    print("\n" + "=" * 60)
-    print("JD RECEIVED")
-    print("=" * 60)
-    print(jd_json)
+    total_start = time.perf_counter()
 
-    # =====================================================
-    # 1. JD -> TEXT
-    # =====================================================
+    print()
+    print("=" * 70)
+    print("🔎 CANDIDATE SEARCH STARTED")
+    print("=" * 70)
+
+    # ========================================================
+    # JD TEXT CONVERSION
+    # ========================================================
+
+    start = time.perf_counter()
 
     jd_text = jd_to_text(jd_json)
 
-    # =====================================================
-    # 2. CREATE JD EMBEDDING
-    # =====================================================
+    print(
+        f"📝 JD text conversion          : "
+        f"{time.perf_counter() - start:.2f} sec"
+    )
+
+    # ========================================================
+    # JD EMBEDDING
+    # ========================================================
+
+    start = time.perf_counter()
 
     jd_embedding = create_embedding(
         jd_text
     )
 
-    # =====================================================
-    # 3. FETCH CANDIDATES
-    # =====================================================
+    print(
+        f"🧠 JD embedding creation       : "
+        f"{time.perf_counter() - start:.2f} sec"
+    )
+
+    # ========================================================
+    # FETCH RESUMES FROM MONGODB
+    # ========================================================
+
+    start = time.perf_counter()
 
     resumes = get_candidates(
         jd_json
     )
 
     print(
-        f"\nCandidates fetched: {len(resumes)}"
+        f"🍃 MongoDB candidate fetch      : "
+        f"{time.perf_counter() - start:.2f} sec"
     )
 
-    # =====================================================
-# REMOVE DUPLICATE CANDIDATES
-# =====================================================
+    print(
+        f"   Candidates fetched           : "
+        f"{len(resumes)}"
+    )
+
+    # ========================================================
+    # DUPLICATE REMOVAL
+    # ========================================================
+
+    start = time.perf_counter()
 
     unique_resumes = []
-    seen_candidates = set()
+    seen = set()
 
     for resume in resumes:
 
-        # Prefer email because it should uniquely identify
-        # a candidate. Fall back to phone, then name.
-        unique_key = (
-            str(resume.get("email", "")).strip().lower()
-            or str(resume.get("phone", "")).strip()
-            or str(resume.get("name", "")).strip().lower()
-            or str(resume.get("candidate", "")).strip().lower()
-            or str(resume.get("_id", ""))
+        identifier = (
+            resume.get("email")
+            or resume.get("phone")
+            or resume.get("candidate_name")
+            or resume.get("name")
+            or resume.get("candidate")
+            or str(resume.get("_id"))
         )
 
-        if unique_key not in seen_candidates:
-            seen_candidates.add(unique_key)
-            unique_resumes.append(resume)
+        identifier = str(
+            identifier
+        ).strip().lower()
+
+        if not identifier:
+            identifier = str(
+                resume.get("_id")
+            )
+
+        if identifier in seen:
+            continue
+
+        seen.add(identifier)
+
+        unique_resumes.append(
+            resume
+        )
 
     resumes = unique_resumes
 
     print(
-        f"Candidates after duplicate removal: {len(resumes)}"
+        f"🔄 Duplicate removal            : "
+        f"{time.perf_counter() - start:.2f} sec"
     )
 
-    # =====================================================
-    # 4. LOCAL PRESELECTION
-    # =====================================================
-    #
-    # IMPORTANT:
-    #
-    # Gemini is NOT called here.
-    #
-    # Semantic similarity is only being used to reduce
-    # the candidate pool before the expensive contextual
-    # evaluation.
-    #
-    # It is NOT the final ATS score.
-    # =====================================================
+    print(
+        f"   Candidates after removal     : "
+        f"{len(resumes)}"
+    )
+
+    # ========================================================
+    # SEMANTIC MATCHING
+    # ========================================================
+
+    print()
+    print("-" * 70)
+    print("🧠 SEMANTIC MATCHING STARTED")
+    print("-" * 70)
+
+    semantic_start = time.perf_counter()
 
     preliminary_candidates = []
 
-    for resume in resumes:
+    for index, resume in enumerate(
+        resumes,
+        start=1
+    ):
+
+        candidate_start = time.perf_counter()
 
         try:
 
-            # ---------------------------------------------
-            # Resume -> text
-            # ---------------------------------------------
+            # ------------------------------------------------
+            # If MongoDB already contains an embedding,
+            # use it directly.
+            # ------------------------------------------------
 
-            resume_text = resume_to_text(
-                resume
+            stored_embedding = resume.get(
+                "embedding"
             )
 
-            # ---------------------------------------------
-            # Resume embedding
-            # ---------------------------------------------
+            if stored_embedding:
 
-            resume_embedding = create_embedding(
-                resume_text
+                resume_embedding = stored_embedding
+
+            else:
+
+                resume_text = resume_to_text(
+                    resume
+                )
+
+                resume_embedding = create_embedding(
+                    resume_text
+                )
+
+            # ------------------------------------------------
+            # Cosine similarity
+            # ------------------------------------------------
+
+            similarity = cosine_similarity(
+                [jd_embedding],
+                [resume_embedding]
+            )[0][0]
+
+            semantic_score = float(
+                similarity * 100
             )
 
-            # ---------------------------------------------
-            # Semantic similarity
-            # ---------------------------------------------
+            preliminary_candidates.append({
+                "resume": resume,
+                "semantic_score": semantic_score
+            })
 
-            similarity = float(
-                cosine_similarity(
-                    [resume_embedding],
-                    [jd_embedding]
-                )[0][0]
+            candidate_name = (
+                resume.get("candidate_name")
+                or resume.get("name")
+                or resume.get("candidate")
+                or "Unknown Candidate"
             )
 
-            preliminary_candidates.append(
-                {
-                    "resume": resume,
-                    "semantic_similarity": similarity
-                }
+            candidate_time = (
+                time.perf_counter()
+                - candidate_start
+            )
+
+            print(
+                f"   Candidate {index:02d} | "
+                f"{candidate_name} | "
+                f"Semantic: {semantic_score:.2f}% | "
+                f"Time: {candidate_time:.2f} sec"
             )
 
         except Exception as e:
 
-            candidate_name = (
-                resume.get("name")
-                or resume.get("candidate")
-                or resume.get("candidate_name")
-                or resume.get("full_name")
-                or resume.get("personal_info", {}).get("name")
-                or "Unknown Candidate"
-            )
-
             print(
-                f"Preselection error for "
-                f"{candidate_name}: {e}"
+                f"   ❌ Candidate {index} "
+                f"semantic matching failed: {e}"
             )
 
-    # =====================================================
-    # 5. SORT PRELIMINARY CANDIDATES
-    # =====================================================
+    semantic_elapsed = (
+        time.perf_counter()
+        - semantic_start
+    )
+
+    print("-" * 70)
+
+    print(
+        f"⏱️ TOTAL SEMANTIC MATCHING     : "
+        f"{semantic_elapsed:.2f} sec"
+    )
+
+    print("-" * 70)
+
+    # ========================================================
+    # SORT BY SEMANTIC SCORE
+    # ========================================================
+
+    start = time.perf_counter()
 
     preliminary_candidates.sort(
-        key=lambda candidate:
-        candidate["semantic_similarity"],
+        key=lambda x: x["semantic_score"],
         reverse=True
     )
 
-    # =====================================================
-    # 6. TAKE TOP 5 FOR CONTEXTUAL EVALUATION
-    # =====================================================
-    #
-    # TEMPORARY DEMO/QUOTA CONTROL.
-    #
-    # Once API limits allow more calls, this can be
-    # increased or removed.
-    # =====================================================
+    print(
+        f"📊 Semantic sorting             : "
+        f"{time.perf_counter() - start:.2f} sec"
+    )
+
+    # ========================================================
+    # SELECT TOP 5
+    # ========================================================
+
+    start = time.perf_counter()
 
     CONTEXTUAL_LIMIT = 5
 
-    shortlisted = preliminary_candidates[
-        :CONTEXTUAL_LIMIT
-    ]
-
-    print(
-        f"Candidates selected for contextual evaluation: "
-        f"{len(shortlisted)}"
+    selected_candidates = (
+        preliminary_candidates[
+            :CONTEXTUAL_LIMIT
+        ]
     )
 
-    print("\nPreselected candidates:")
+    print(
+        f"🎯 Candidate selection          : "
+        f"{time.perf_counter() - start:.2f} sec"
+    )
 
-    for index, item in enumerate(
-        shortlisted,
+    print(
+        f"   Candidates selected for "
+        f"contextual evaluation: "
+        f"{len(selected_candidates)}"
+    )
+
+    print()
+    print("Preselected candidates:")
+
+    for index, candidate in enumerate(
+        selected_candidates,
         start=1
     ):
 
-        resume = item["resume"]
-
-        print(
-            f"{index}. "
-            f"{resume.get('name', 'Unknown Candidate')} "
-            f"- Semantic: "
-            f"{round(item['semantic_similarity'] * 100, 2)}%"
-        )
-
-    # =====================================================
-    # 7. FULL CONTEXTUAL EVALUATION
-    # =====================================================
-    #
-    # calculate_ranking() should now:
-    #
-    # 1. Build structured evidence
-    # 2. Call contextual_evaluator.py
-    # 3. Let Gemini evaluate the complete candidate
-    # 4. Return overall contextual fit
-    #
-    # NO fixed final weights are applied here.
-    # =====================================================
-
-    results = []
-
-    for item in shortlisted:
-
-        resume = item["resume"]
-
-        similarity = item[
-            "semantic_similarity"
-        ]
+        resume = candidate["resume"]
 
         candidate_name = (
-            resume.get("name")
+            resume.get("candidate_name")
+            or resume.get("name")
             or resume.get("candidate")
             or "Unknown Candidate"
         )
 
-        print("\n" + "-" * 60)
         print(
-            f"Contextually evaluating: {candidate_name}"
+            f"{index}. {candidate_name} - "
+            f"Semantic: "
+            f"{candidate['semantic_score']:.2f}%"
         )
-        print("-" * 60)
 
-        try:
+    # ========================================================
+    # PREPARE CONTEXTUAL TASKS
+    # ========================================================
 
-            candidate = calculate_ranking(
-                jd=jd_json,
-                resume=resume,
-                semantic_score=similarity
-            )
+    tasks = []
 
-            # ---------------------------------------------
-            # Store semantic similarity separately
-            # ---------------------------------------------
+    for index, candidate in enumerate(
+        selected_candidates,
+        start=1
+    ):
 
-            candidate[
-                "semantic_score"
-            ] = round(
-                similarity * 100,
-                2
-            )
+        tasks.append({
+            "index": index,
+            "resume": candidate["resume"],
+            "semantic_score": candidate["semantic_score"],
+            "jd_json": jd_json
+        })
 
-            # ---------------------------------------------
-            # Attach EXACT resume from DB
-            # ---------------------------------------------
+    # ========================================================
+    # CONCURRENT CONTEXTUAL EVALUATION
+    # ========================================================
 
-            candidate["resume"] = resume
+    print()
+    print("=" * 70)
+    print("🤖 CONCURRENT CONTEXTUAL GEMINI EVALUATION")
+    print("=" * 70)
 
-            # ---------------------------------------------
-            # Add result
-            # ---------------------------------------------
+    contextual_start = time.perf_counter()
 
-            results.append(
-                candidate
-            )
+    results = []
 
-            print(
-                "Overall Fit:",
-                candidate.get(
-                    "overall_score",
-                    0
+    # Maximum 5 because we only evaluate top 5
+    max_workers = min(
+        5,
+        len(tasks)
+    )
+
+    if max_workers > 0:
+
+        with ThreadPoolExecutor(
+            max_workers=max_workers
+        ) as executor:
+
+            futures = [
+                executor.submit(
+                    evaluate_candidate,
+                    task
                 )
-            )
+                for task in tasks
+            ]
 
-            print(
-                "Recommendation:",
-                candidate.get(
-                    "recommendation",
-                    "N/A"
-                )
-            )
+            for future in as_completed(
+                futures
+            ):
 
-            print(
-                "Confidence:",
-                candidate.get(
-                    "confidence",
-                    "N/A"
-                )
-            )
+                try:
 
-        except Exception as e:
+                    result = future.result()
 
-            print(
-                f"Contextual evaluation failed for "
-                f"{candidate_name}: {e}"
-            )
+                    results.append(
+                        result
+                    )
 
-            failed_candidate = {
+                except Exception as e:
 
-                "evaluation_status":
-                    "failed",
+                    print(
+                        f"❌ Worker failed: {e}"
+                    )
 
-                "overall_score":
-                    None,
+    contextual_elapsed = (
+        time.perf_counter()
+        - contextual_start
+    )
 
-                "recommendation":
-                    "Evaluation Unavailable",
+    print()
+    print("-" * 70)
 
-                "confidence":
-                    "N/A",
+    print(
+        f"⏱️ TOTAL CONTEXTUAL EVALUATION: "
+        f"{contextual_elapsed:.2f} sec"
+    )
 
-                "role_fit":
-                    "Contextual evaluation unavailable",
+    print("-" * 70)
 
-                "reason":
-                    "The AI contextual evaluation could "
-                    "not be completed because the evaluation "
-                    "service was temporarily unavailable.",
+    # ========================================================
+    # FINAL RANKING
+    # ========================================================
 
-                "strengths": [],
-
-                "gaps": [],
-
-                "compensating_factors": [],
-
-                "critical_requirements_missing": [],
-
-                "factor_analysis": {},
-
-                "breakdown": {},
-
-                "gap_analysis": {},
-
-                "explanation": {},
-
-                "semantic_score": round(
-                    similarity * 100,
-                    2
-                ),
-
-                "resume":
-                    resume
-            }
-
-            results.append(
-                failed_candidate
-            )
-
-                # IMPORTANT:
-                # Do not create a fake contextual score.
-                # If Gemini fails, skip that candidate from
-                # final contextual ranking.
-
-            continue
-
-    # =====================================================
-    # 8. SORT BY FINAL OVERALL CONTEXTUAL SCORE
-    # =====================================================
+    start = time.perf_counter()
 
     results.sort(
-        key=lambda candidate: float(
-             candidate.get("overall_score") or 0
+        key=lambda x: float(
+            x.get(
+                "overall_score",
+                0
+            )
         ),
         reverse=True
     )
 
-    # =====================================================
-    # 9. DEBUG FINAL RANKING
-    # =====================================================
+    print(
+        f"📊 Final ranking sorting        : "
+        f"{time.perf_counter() - start:.2f} sec"
+    )
 
-    print("\n" + "=" * 60)
-    print("FINAL CONTEXTUAL RANKING")
-    print("=" * 60)
+    # ========================================================
+    # FINAL RANKING DISPLAY
+    # ========================================================
 
-    for index, candidate in enumerate(
+    print()
+    print("=" * 70)
+    print("🏆 FINAL CONTEXTUAL RANKING")
+    print("=" * 70)
+
+    for index, result in enumerate(
         results,
         start=1
     ):
 
-        resume = candidate.get(
-            "resume",
-            {}
-        )
-
-        print(
-            f"\n{index}. "
-            f"{resume.get('name', 'Unknown Candidate')}"
-        )
-
-        print(
-            "Overall Fit:",
-            candidate.get(
-                "overall_score",
-                0
+        candidate_name = (
+            result.get("candidate_name")
+            or result.get("name")
+            or result.get("resume", {}).get(
+                "candidate_name",
+                "Unknown Candidate"
             )
         )
 
+        print()
         print(
-            "Recommendation:",
-            candidate.get(
-                "recommendation",
-                "N/A"
-            )
+            f"{index}. {candidate_name}"
         )
 
         print(
-            "Confidence:",
-            candidate.get(
-                "confidence",
-                "N/A"
-            )
+            f"Overall Fit: "
+            f"{result.get('overall_score', 0)}"
         )
 
         print(
-            "Role Fit:",
-            candidate.get(
-                "role_fit",
-                "N/A"
-            )
+            f"Recommendation: "
+            f"{result.get('recommendation', 'Under Review')}"
         )
 
         print(
-            "Semantic Similarity:",
-            candidate.get(
-                "semantic_score",
-                0
-            )
+            f"Confidence: "
+            f"{result.get('confidence', 'Unknown')}"
         )
 
         print(
-            "Reason:",
-            candidate.get(
-                "reason",
-                "N/A"
-            )
+            f"Role Fit: "
+            f"{result.get('role_fit', '')}"
         )
 
-    # =====================================================
-    # 10. CONVERT MongoDB ObjectId -> STRING
-    # =====================================================
+        print(
+            f"Semantic Similarity: "
+            f"{result.get('semantic_score', 0):.2f}"
+        )
 
-    safe_results = make_json_safe(
+        print(
+            f"Reason: "
+            f"{result.get('reason', '')}"
+        )
+
+    # ========================================================
+    # JSON SAFE CONVERSION
+    # ========================================================
+
+    start = time.perf_counter()
+
+    results = make_json_safe(
         results
     )
 
-    # =====================================================
-    # 11. RETURN
-    # =====================================================
+    print()
+    print(
+        f"🔄 JSON conversion              : "
+        f"{time.perf_counter() - start:.2f} sec"
+    )
 
-    return safe_results
+    # ========================================================
+    # TOTAL TIME
+    # ========================================================
+
+    total_elapsed = (
+        time.perf_counter()
+        - total_start
+    )
+
+    print()
+    print("=" * 70)
+
+    print(
+        f"⏱️ TOTAL /search_candidates() : "
+        f"{total_elapsed:.2f} sec"
+    )
+
+    print("=" * 70)
+
+    print(
+        "✅ CANDIDATE SEARCH COMPLETED"
+    )
+
+    print("=" * 70)
+
+    return results
