@@ -10,6 +10,7 @@ import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import EmojiEventsRoundedIcon from "@mui/icons-material/EmojiEventsRounded";
 import RecommendRoundedIcon from "@mui/icons-material/RecommendRounded";
 import InsightsRoundedIcon from "@mui/icons-material/InsightsRounded";
+import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -106,36 +107,99 @@ function Results() {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: colors.paper, p: { xs: 2, md: 4 } }}>
-      {/* HEADER */}
-      <Box
+      {/* HEADER CARD */}
+      <Card
+        elevation={0}
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: { xs: "flex-start", sm: "center" },
-          flexDirection: { xs: "column", sm: "row" },
-          gap: 2,
+          borderRadius: 3,
+          border: `1px solid ${colors.hairline}`,
+          bgcolor: colors.paperRaised,
+          p: { xs: 2.5, md: 3.5 },
           mb: 4,
+          position: "relative",
+          overflow: "hidden",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: 4,
+            height: "100%",
+            bgcolor: colors.brass,
+          },
         }}
       >
-        <Box>
-          <Typography sx={eyebrow}>Case File</Typography>
-          <Typography sx={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 30, color: colors.ink, mt: 0.25 }}>
-            Candidate Evaluation
-          </Typography>
-          <Typography sx={{ color: colors.slate, mt: 0.5 }}>
-            Ranked results for <strong style={{ color: colors.ink }}>{analysis.job_title || "the selected role"}</strong>
-          </Typography>
-        </Box>
-
-        <Button
-          variant="outlined"
-          startIcon={<ArrowBackRoundedIcon />}
-          onClick={() => navigate("/")}
-          sx={{ borderRadius: 1.5, px: 3, fontWeight: 700, borderColor: colors.hairlineStrong, color: colors.ink }}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", sm: "center" },
+            flexDirection: { xs: "column", sm: "row" },
+            gap: 2.5,
+          }}
         >
-          New Search
-        </Button>
-      </Box>
+          <Box>
+            <Typography
+              sx={{
+                fontFamily: "'Fraunces', serif",
+                fontWeight: 700,
+                fontSize: { xs: "1.8rem", md: "2.25rem" },
+                color: colors.ink,
+                lineHeight: 1.15,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Candidate Evaluation
+            </Typography>
+
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1, flexWrap: "wrap", gap: 1 }}>
+              <Typography variant="body2" sx={{ color: colors.slate, fontSize: "0.9rem", fontWeight: 500 }}>
+                Ranked suitability evaluation for
+              </Typography>
+              <Chip
+                icon={<WorkOutlineRoundedIcon sx={{ fontSize: "15px !important", color: `${colors.brassDark} !important` }} />}
+                label={analysis.job_title || "Selected Role"}
+                sx={{
+                  bgcolor: colors.brassSoft,
+                  color: colors.brassDark,
+                  fontWeight: 700,
+                  fontSize: "0.82rem",
+                  height: 28,
+                  borderRadius: "8px",
+                  border: `1px solid ${colors.hairlineStrong}`,
+                  "& .MuiChip-label": { px: 1.25 },
+                }}
+              />
+            </Stack>
+          </Box>
+
+          <Button
+            onClick={() => navigate("/")}
+            startIcon={<ArrowBackRoundedIcon sx={{ fontSize: 18 }} />}
+            sx={{
+              bgcolor: colors.paper,
+              color: colors.ink,
+              border: `1px solid ${colors.hairlineStrong}`,
+              px: 3,
+              py: 1.1,
+              borderRadius: "10px",
+              fontWeight: 700,
+              fontSize: "0.85rem",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                bgcolor: colors.ink,
+                color: "#FFFFFF",
+                borderColor: colors.ink,
+                transform: "translateY(-1px)",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+              },
+            }}
+          >
+            New Search
+          </Button>
+        </Box>
+      </Card>
 
       {/* STATS */}
       <Grid container spacing={3} sx={{ mb: 4 }}>

@@ -1,12 +1,10 @@
 // ============================================================================
-// DESIGN SYSTEM — "Dossier"
+// DESIGN SYSTEM — "AI Recruitment"
 // ----------------------------------------------------------------------------
-// Concept: recruiters aren't scrolling a feed, they're building a case file
-// on every candidate. The palette borrows from ink, brass fasteners and
-// case-folder paper rather than the default indigo/slate SaaS look. Scores
-// read like a wax seal / rating stamp instead of a generic progress bar.
+// Concept: Light, modern executive interface utilizing exact sampled hex values:
+// Warm Alabaster, Slate Blue, Muted Sage, Off-White card surfaces, and Ink accents.
 //
-// Fonts (add to your index.html <head>, or install via @fontsource/*):
+// Fonts:
 // <link rel="preconnect" href="https://fonts.googleapis.com">
 // <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 // ============================================================================
@@ -14,28 +12,26 @@
 import { createTheme, alpha } from "@mui/material/styles";
 
 export const colors = {
-  ink: "#12151C",
-  inkSoft: "#242A36",
-  inkFaint: "#3A4152",
-  paper: "#FAFAF8",
-  paperRaised: "#FFFFFF",
-  hairline: "#E3E1D8",
-  hairlineStrong: "#D8D5C8",
-  brass: "#B8863B",
-  brassDark: "#8F6526",
-  brassSoft: "#F6EEDD",
-  teal: "#1F6F5C",
-  tealSoft: "#E5F2EE",
-  amber: "#C97A2B",
-  amberSoft: "#FBEEE0",
-  crimson: "#A23B3B",
-  crimsonSoft: "#FBEAEA",
-  slate: "#4B5468",
-  slateFaint: "#8A90A0",
+  ink: "#111111",          // Main heading and primary body text
+  inkSoft: "#2D3136",
+  inkFaint: "#4A5056",
+  paper: "#F3EFE6",        // Main canvas background (Warm Alabaster / Light Sand)
+  paperRaised: "#FAF8F5",  // Cards, inputs, and elevated containers (Soft Off-White)
+  hairline: "#E3DEC3",     // Subtle card borders and dividers (Light Beige Hairline)
+  hairlineStrong: "#C5C0B4",
+  brass: "#6A82A0",        // Active nav & primary action buttons (Slate Blue)
+  brassDark: "#0B1E38",    // Header buttons / high-contrast elements (Dark Navy / Ink)
+  brassSoft: "#E8EEF5",    // Hover states & light accents
+  teal: "#85A090",         // Selected pill tag / active state (Muted Sage Green)
+  tealSoft: "#E2EAE4",
+  amber: "#A87241",        // Secondary status indicator (English Ochre)
+  amberSoft: "#F4ECE3",
+  crimson: "#A65151",      // Error / alert status (Soft English Rust)
+  crimsonSoft: "#F6EAE7",
+  slate: "#888B90",        // Secondary / muted text (Faded Slate)
+  slateFaint: "#888B90",
 };
 
-// Tier scale used by the ScoreSeal signature element and anywhere a
-// candidate's fit is expressed. Kept in one place so it stays consistent.
 export const scoreTier = (value) => {
   if (value >= 80) return { name: "Excellent", main: colors.teal, soft: colors.tealSoft };
   if (value >= 65) return { name: "Strong", main: colors.brass, soft: colors.brassSoft };
@@ -101,11 +97,8 @@ const theme = createTheme({
   },
 });
 
-// Small helper: the mono "utility" font used for stats, scores, eyebrow
-// labels and timestamps — anywhere a number needs to feel measured.
 export const mono = "'IBM Plex Mono', ui-monospace, monospace";
 
-// Reusable "eyebrow" label style (uppercase, tracked-out mono caption)
 export const eyebrowSx = {
   fontFamily: mono,
   fontSize: "0.7rem",

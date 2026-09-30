@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Container, Snackbar, Alert, Fade, Backdrop, CircularProgress, Typography } from "@mui/material";
+import { Box, Container, Snackbar, Alert, Fade, Backdrop, CircularProgress, Typography, Link } from "@mui/material";
 
 import Sidebar from "../components/Sidebar.jsx";
 import Header from "../components/Header.jsx";
 import SearchSource from "../components/SearchSource.jsx";
 import UploadJD from "../components/uploadJD.jsx";
-import JDAnalysis from "../components/JDAnalysis.jsx";
 import API from "../services/api.js";
 import { colors, mono } from "../theme/theme.js";
 
@@ -16,7 +15,6 @@ function Dashboard() {
   const [source, setSource] = useState("internal");
   const [platform, setPlatform] = useState("");
   const [jd, setJd] = useState("");
-  const [analysis, setAnalysis] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState("");
@@ -37,7 +35,6 @@ function Dashboard() {
 
       const parseResponse = await API.post("/parseJD", { jd });
       const parsedJD = parseResponse.data;
-      setAnalysis(parsedJD);
 
       setLoadingStage("Matching and ranking relevant candidates…");
       const searchResponse = await API.post("/searchCandidates", parsedJD);
@@ -56,16 +53,26 @@ function Dashboard() {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: colors.paper, color: colors.ink }}>
+      {/* Sidebar Navigation */}
       <Sidebar />
 
+      {/* Main Content Viewport */}
       <Box component="main" sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflowX: "hidden" }}>
         <Header />
 
+        {/* Dashboard Body Container */}
         <Container
-          maxWidth="xl"
-          sx={{ py: { xs: 2.5, md: 4 }, px: { xs: 2, sm: 3, md: 4 }, display: "flex", flexDirection: "column", gap: 3.5 }}
+          maxWidth="lg"
+          sx={{
+            py: { xs: 2.5, md: 4 },
+            px: { xs: 2, sm: 3, md: 4 },
+            display: "flex",
+            flexDirection: "column",
+            gap: 3.5,
+            flex: 1,
+          }}
         >
-          {/* Source filter */}
+          {/* Target Search Source Selection Card */}
           <Box
             sx={{
               p: 2.5,
@@ -77,34 +84,54 @@ function Dashboard() {
             <SearchSource source={source} setSource={setSource} platform={platform} setPlatform={setPlatform} />
           </Box>
 
-          {/* Main grid */}
+          {/* Full-Width Case Intake Workspace */}
           <Box
             sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", lg: "2fr 1.1fr" },
-              gap: 3.5,
-              alignItems: "start",
+              bgcolor: colors.paperRaised,
+              borderRadius: 3,
+              border: `1px solid ${colors.hairline}`,
+              p: { xs: 2.5, md: 4 },
+              width: "100%",
             }}
           >
-            <Box
-              sx={{
-                bgcolor: colors.paperRaised,
-                borderRadius: 3,
-                border: `1px solid ${colors.hairline}`,
-                p: { xs: 2.5, md: 3.5 },
-              }}
-            >
-              <UploadJD jd={jd} setJd={setJd} handleFind={handleFind} loading={loading} />
-            </Box>
-
-            <Box sx={{ position: { lg: "sticky" }, top: 90 }}>
-              <JDAnalysis analysis={analysis} />
-            </Box>
+            <UploadJD jd={jd} setJd={setJd} handleFind={handleFind} loading={loading} />
           </Box>
         </Container>
+
+        {/* Application Footer */}
+        <Box
+          component="footer"
+          sx={{
+            py: 2.5,
+            px: 4,
+            borderTop: `1px solid ${colors.hairline}`,
+            bgcolor: colors.paperRaised,
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            justify: "space-between",
+            alignItems: "center",
+            gap: 1.5,
+            mt: "auto",
+          }}
+        >
+          <Typography variant="body2" sx={{ color: "text.secondary", fontSize: 13 }}>
+            © {new Date().getFullYear()} AI Recruitment. All rights reserved.
+          </Typography>
+          <Box sx={{ display: "flex", gap: 3 }}>
+            <Link href="#" underline="hover" sx={{ color: "text.secondary", fontSize: 13 }}>
+              Terms of Service
+            </Link>
+            <Link href="#" underline="hover" sx={{ color: "text.secondary", fontSize: 13 }}>
+              Privacy Policy
+            </Link>
+            <Link href="#" underline="hover" sx={{ color: "text.secondary", fontSize: 13 }}>
+              Help Center
+            </Link>
+          </Box>
+        </Box>
       </Box>
 
-      {/* Processing backdrop */}
+      {/* Processing Loader Backdrop */}
       <Backdrop
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
@@ -122,7 +149,7 @@ function Dashboard() {
         </Typography>
       </Backdrop>
 
-      {/* Notifications */}
+      {/* Toast Notifications */}
       <Snackbar
         open={notification.open}
         autoHideDuration={5000}

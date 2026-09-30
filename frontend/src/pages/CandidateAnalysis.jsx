@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+
 import {
   Avatar,
   Box,
@@ -8,13 +9,17 @@ import {
   Container,
   Divider,
   Grid,
+  LinearProgress,
   Paper,
   Stack,
   Tab,
   Tabs,
   Typography,
+  alpha,
+  useTheme,
 } from "@mui/material";
 
+// Icons
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import WorkRoundedIcon from "@mui/icons-material/WorkRounded";
 import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
@@ -24,45 +29,80 @@ import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import PsychologyRoundedIcon from "@mui/icons-material/PsychologyRounded";
-import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
-import FolderSpecialRoundedIcon from "@mui/icons-material/FolderSpecialRounded";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 
 import JDAnalysis from "../components/JDAnalysis.jsx";
-import ScoreSeal from "../components/ScoreSeal.jsx";
-import { colors, mono, scoreTier } from "../theme/theme.js";
 
 function CandidateAnalysis() {
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
+
   const candidate = location.state;
   const [profileTab, setProfileTab] = useState(0);
 
-  // --------------------------------------------------
-  // Empty State Guard
-  // --------------------------------------------------
+  // =========================================================
+  // EMPTY STATE
+  // =========================================================
+
   if (!candidate) {
     return (
-      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: colors.paper, p: 3 }}>
-        <Paper elevation={0} sx={{ p: 5, maxWidth: 480, textAlign: "center", borderRadius: 4, border: `1px solid ${colors.hairline}` }}>
-          <Avatar sx={{ width: 56, height: 56, bgcolor: colors.crimsonSoft, color: colors.crimson, mx: "auto", mb: 2 }}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          bgcolor: "#F8FAFC",
+          p: 3,
+        }}
+      >
+        <Paper
+          elevation={0}
+          sx={{
+            p: 5,
+            maxWidth: 480,
+            textAlign: "center",
+            borderRadius: 4,
+            border: "1px solid #E2E8F0",
+          }}
+        >
+          <Avatar
+            sx={{
+              width: 56,
+              height: 56,
+              bgcolor: alpha(theme.palette.error.main, 0.1),
+              color: "error.main",
+              mx: "auto",
+              mb: 2,
+            }}
+          >
             <ErrorOutlineRoundedIcon />
           </Avatar>
-          <Typography sx={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 20, color: colors.ink }}>
+
+          <Typography variant="h6" fontWeight={700} color="#0F172A">
             Candidate Data Unavailable
           </Typography>
-          <Typography sx={{ mt: 1, mb: 3, color: colors.slate, fontSize: 14 }}>
-            We couldn't retrieve the dossier details. Please select a candidate from the search results again.
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 1, mb: 3 }}
+          >
+            We couldn't retrieve the analysis details. Please select a candidate
+            from the search results again.
           </Typography>
+
           <Button
             variant="contained"
-            disableElevation
             startIcon={<ArrowBackRoundedIcon />}
             onClick={() => navigate(-1)}
-            sx={{ borderRadius: 1.5, px: 3, bgcolor: colors.ink, fontWeight: 700, "&:hover": { bgcolor: colors.inkSoft } }}
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              px: 3,
+            }}
           >
             Return to Candidates
           </Button>
@@ -71,29 +111,44 @@ function CandidateAnalysis() {
     );
   }
 
-  // --------------------------------------------------
-  // Data Extraction & Normalization
-  // --------------------------------------------------
+  // =========================================================
+  // DATA
+  // =========================================================
+
   const resume = candidate.resume || {};
   const jobAnalysis = candidate.job_analysis || {};
+
   const score = Number(candidate.overall_score || 0);
   const recommendation = candidate.recommendation || "Under Review";
   const confidence = candidate.confidence || "Moderate";
+
   const roleFit = candidate.role_fit || "Role fit analysis not generated.";
   const reason = candidate.reason || "Detailed evaluation rationale not provided.";
+
   const strengths = Array.isArray(candidate.strengths) ? candidate.strengths : [];
   const gaps = Array.isArray(candidate.gaps) ? candidate.gaps : [];
-  const compensatingFactors = Array.isArray(candidate.compensating_factors) ? candidate.compensating_factors : [];
-  const criticalMissing = Array.isArray(candidate.critical_requirements_missing) ? candidate.critical_requirements_missing : [];
+  const compensatingFactors = Array.isArray(candidate.compensating_factors)
+    ? candidate.compensating_factors
+    : [];
+  const criticalMissing = Array.isArray(candidate.critical_requirements_missing)
+    ? candidate.critical_requirements_missing
+    : [];
+
   const factorAnalysis = candidate.factor_analysis || {};
 
   const name =
-    resume.name || resume.candidate || resume.candidate_name || resume.full_name || resume.personal_info?.name || "Candidate Dossier";
+    resume.name ||
+    resume.candidate ||
+    resume.candidate_name ||
+    resume.full_name ||
+    resume.personal_info?.name ||
+    "Candidate Dossier";
 
   const email = resume.email || resume.personal_info?.email || "Not Provided";
-  const phone = resume.phone || resume.mobile || resume.personal_info?.phone || "Not Provided";
+  const phone =
+    resume.phone || resume.mobile || resume.personal_info?.phone || "Not Provided";
 
-  let currentRole =
+  const currentRole =
     resume.current_role ||
     resume.designation ||
     resume.job_title ||
@@ -101,80 +156,235 @@ function CandidateAnalysis() {
     (Array.isArray(resume.experience) && resume.experience[0]?.title) ||
     "Professional";
 
-  const experienceYears = resume.experience_years ?? resume.total_experience ?? null;
-  const educationList = Array.isArray(resume.education) ? resume.education : resume.education ? [resume.education] : [];
+  const experienceYears =
+    resume.experience_years ?? resume.total_experience ?? null;
+
+  const educationList = Array.isArray(resume.education)
+    ? resume.education
+    : resume.education
+    ? [resume.education]
+    : [];
+
   const skills = Array.isArray(resume.skills) ? resume.skills : [];
   const projects = Array.isArray(resume.projects) ? resume.projects : [];
   const experienceList = Array.isArray(resume.experience) ? resume.experience : [];
   const certifications = Array.isArray(resume.certifications) ? resume.certifications : [];
 
-  const tier = scoreTier(score);
+  // =========================================================
+  // SCORE THEME
+  // =========================================================
 
-  const formatFactorName = (key) => key.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase());
+  const getScoreTheme = (value) => {
+    if (value >= 80) {
+      return { main: "#10B981", bg: "#ECFDF5", text: "#065F46" };
+    }
+    if (value >= 65) {
+      return { main: "#3B82F6", bg: "#EFF6FF", text: "#1E40AF" };
+    }
+    if (value >= 50) {
+      return { main: "#F59E0B", bg: "#FFFBEB", text: "#92400E" };
+    }
+    return { main: "#EF4444", bg: "#FEF2F2", text: "#991B1B" };
+  };
+
+  const scoreTheme = getScoreTheme(score);
+
+  const formatFactorName = (key) =>
+    key.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase());
+
+  // =========================================================
+  // PAGE
+  // =========================================================
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: colors.paper, py: 4 }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "#F7F8FA",
+        py: { xs: 2, md: 4 },
+      }}
+    >
       <Container maxWidth="xl">
-        {/* Navigation Bar */}
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3.5 }}>
+        {/* TOP HEADER */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+            px: { xs: 0, md: 0.5 },
+          }}
+        >
           <Button
             variant="text"
             startIcon={<ArrowBackRoundedIcon />}
             onClick={() => navigate(-1)}
-            sx={{ color: colors.slate, fontWeight: 700, "&:hover": { bgcolor: colors.paperRaised } }}
+            sx={{
+              color: "#334155",
+              fontWeight: 700,
+              fontSize: "0.9rem",
+              textTransform: "none",
+              borderRadius: 2,
+              px: 1.5,
+              py: 1,
+              "&:hover": { bgcolor: "#EEF2F7" },
+            }}
           >
             Back to Candidate Matches
           </Button>
+
           <Chip
             icon={<AutoAwesomeRoundedIcon sx={{ fontSize: "16px !important" }} />}
             label="AI Contextual Analysis"
             size="small"
-            sx={{ bgcolor: colors.brassSoft, color: colors.brassDark, fontWeight: 700, borderRadius: 1.5 }}
+            sx={{
+              height: 34,
+              px: 0.8,
+              bgcolor: "#EEF2FF",
+              color: "#4F46E5",
+              fontWeight: 800,
+              fontSize: "0.78rem",
+              borderRadius: 2,
+              border: "1px solid #E0E7FF",
+              boxShadow: "0 5px 16px rgba(79,70,229,0.08)",
+              "& .MuiChip-icon": { color: "#6366F1" },
+            }}
           />
         </Box>
 
-        {/* Hero Header Card */}
-        <Paper elevation={0} sx={{ borderRadius: 4, p: { xs: 3, md: 4 }, mb: 4, border: `1px solid ${colors.hairline}`, bgcolor: colors.paperRaised }}>
-          <Grid container spacing={3} alignItems="center">
-            {/* Candidate Identity */}
-            <Grid item xs={12} md={7} lg={8}>
-              <Stack direction="row" spacing={3} alignItems="center">
+        {/* CANDIDATE HERO */}
+        <Paper
+          elevation={0}
+          sx={{
+            position: "relative",
+            borderRadius: { xs: 3, md: 4 },
+            p: { xs: 2.5, sm: 3.5, md: 4.5 },
+            mb: 4,
+            bgcolor: "#FFFFFF",
+            border: "1px solid #E2E8F0",
+            overflow: "hidden",
+            boxShadow: "0 15px 45px rgba(15,23,42,0.06)",
+          }}
+        >
+          {/* Decorative Circle */}
+          <Box
+            sx={{
+              position: "absolute",
+              width: 330,
+              height: 330,
+              borderRadius: "50%",
+              top: -150,
+              right: -100,
+              background:
+                "radial-gradient(circle, rgba(99,102,241,0.10) 0%, rgba(99,102,241,0) 70%)",
+              pointerEvents: "none",
+            }}
+          />
+
+          <Grid container spacing={{ xs: 3, md: 4 }} alignItems="center" sx={{ position: "relative", zIndex: 1 }}>
+            {/* CANDIDATE INFORMATION */}
+            <Grid item xs={12} md={7} lg={7.5}>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={{ xs: 2, sm: 2.5 }}
+                alignItems={{ xs: "flex-start", sm: "center" }}
+              >
                 <Avatar
                   sx={{
-                    width: { xs: 64, md: 84 },
-                    height: { xs: 64, md: 84 },
-                    bgcolor: colors.brassSoft,
-                    color: colors.brassDark,
-                    fontFamily: "'Fraunces', serif",
-                    fontSize: 32,
-                    fontWeight: 700,
-                    border: `1.5px solid ${colors.hairlineStrong}`,
+                    width: { xs: 72, sm: 90 },
+                    height: { xs: 72, sm: 90 },
+                    bgcolor: "#EEF2FF",
+                    color: "#4F46E5",
+                    fontSize: { xs: 30, sm: 38 },
+                    fontWeight: 800,
+                    fontFamily: "Georgia, 'Times New Roman', serif",
+                    border: "1px solid #C7D2FE",
+                    boxShadow: "0 8px 25px rgba(79,70,229,0.12)",
                   }}
                 >
-                  {name.charAt(0)}
+                  {name.charAt(0).toUpperCase()}
                 </Avatar>
-                <Box>
-                  <Typography sx={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: { xs: 26, md: 32 }, color: colors.ink, letterSpacing: "-0.01em" }}>
+
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    sx={{
+                      fontSize: "0.68rem",
+                      fontWeight: 800,
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      color: "#64748B",
+                      mb: 0.7,
+                      fontFamily: "'Courier New', monospace",
+                    }}
+                  >
+                    CANDIDATE DOSSIER
+                  </Typography>
+
+                  <Typography
+                    sx={{
+                      fontFamily: "Georgia, 'Times New Roman', serif",
+                      fontSize: { xs: "2rem", sm: "2.4rem", md: "2.7rem" },
+                      lineHeight: 1.05,
+                      fontWeight: 700,
+                      color: "#0F172A",
+                      letterSpacing: "-0.04em",
+                      mb: 0.6,
+                    }}
+                  >
                     {name}
                   </Typography>
-                  <Typography sx={{ color: colors.slate, fontWeight: 500, fontSize: 17, mb: 1.5 }}>
+
+                  <Typography
+                    sx={{
+                      fontFamily: "Georgia, 'Times New Roman', serif",
+                      fontSize: { xs: "1.05rem", sm: "1.2rem" },
+                      fontWeight: 600,
+                      color: "#475569",
+                      mb: 1.8,
+                    }}
+                  >
                     {currentRole}
                   </Typography>
+
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                     {experienceYears !== null && (
                       <Chip
                         icon={<WorkRoundedIcon sx={{ fontSize: "15px !important" }} />}
                         label={`${experienceYears} Yrs Experience`}
                         size="small"
-                        sx={{ bgcolor: colors.paper, color: colors.ink, fontWeight: 700, border: `1px solid ${colors.hairline}` }}
+                        sx={{
+                          bgcolor: "#F8FAFC",
+                          color: "#334155",
+                          fontWeight: 600,
+                          border: "1px solid #E2E8F0",
+                          borderRadius: 1.5,
+                        }}
                       />
                     )}
+
                     {educationList.length > 0 && (
                       <Chip
                         icon={<SchoolRoundedIcon sx={{ fontSize: "15px !important" }} />}
-                        label={typeof educationList[0] === "object" ? educationList[0].degree || educationList[0].qualification || "Educated" : educationList[0]}
+                        label={
+                          typeof educationList[0] === "object"
+                            ? educationList[0].degree ||
+                              educationList[0].qualification ||
+                              "Education"
+                            : educationList[0]
+                        }
                         size="small"
-                        sx={{ bgcolor: colors.paper, color: colors.ink, fontWeight: 700, border: `1px solid ${colors.hairline}` }}
+                        sx={{
+                          bgcolor: "#F8FAFC",
+                          color: "#334155",
+                          fontWeight: 600,
+                          border: "1px solid #E2E8F0",
+                          borderRadius: 1.5,
+                          maxWidth: { xs: "100%", sm: 320 },
+                          "& .MuiChip-label": {
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          },
+                        }}
                       />
                     )}
                   </Stack>
@@ -182,32 +392,159 @@ function CandidateAnalysis() {
               </Stack>
             </Grid>
 
-            {/* Score seal + recommendation */}
-            <Grid item xs={12} md={5} lg={4}>
+            {/* SCORE CARD */}
+            <Grid item xs={12} md={5} lg={4.5}>
               <Paper
                 elevation={0}
                 sx={{
-                  p: 2.5,
-                  borderRadius: 3,
-                  bgcolor: tier.soft,
-                  border: `1px solid ${tier.main}33`,
+                  p: { xs: 2.5, sm: 3 },
+                  borderRadius: 3.5,
+                  bgcolor: scoreTheme.bg,
+                  border: `1px solid ${alpha(scoreTheme.main, 0.22)}`,
+                  minHeight: 195,
                   display: "flex",
-                  alignItems: "center",
-                  gap: 2.5,
+                  flexDirection: "column",
+                  justifyContent: "space-between",
                 }}
               >
-                <ScoreSeal score={score} size={76} />
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontFamily: mono, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.1em", color: colors.slate, textTransform: "uppercase" }}>
-                    Overall Fit
-                  </Typography>
-                  <Chip
-                    label={recommendation}
-                    sx={{ mt: 0.75, bgcolor: tier.main, color: "#fff", fontWeight: 700, fontSize: "0.75rem" }}
+                {/* TOP ROW: HEADER & CHIP */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    gap: 1.5,
+                    width: "100%",
+                  }}
+                >
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      sx={{
+                        color: scoreTheme.text,
+                        fontSize: "0.72rem",
+                        fontWeight: 800,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.12em",
+                        fontFamily: "'Courier New', monospace",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      Overall Fit Score
+                    </Typography>
+
+                    {/* SCORE DISPLAY */}
+                    <Box sx={{ display: "flex", alignItems: "baseline", mt: 0.5 }}>
+                      <Typography
+                        sx={{
+                          color: scoreTheme.text,
+                          fontFamily: "Georgia, 'Times New Roman', serif",
+                          fontSize: { xs: "3rem", sm: "3.5rem" },
+                          lineHeight: 1,
+                          fontWeight: 700,
+                          letterSpacing: "-0.05em",
+                        }}
+                      >
+                        {score.toFixed(0)}
+                      </Typography>
+                      <Typography
+                        component="span"
+                        sx={{
+                          color: scoreTheme.text,
+                          opacity: 0.6,
+                          fontFamily: "Georgia, 'Times New Roman', serif",
+                          fontSize: "1.25rem",
+                          fontWeight: 700,
+                          ml: 0.5,
+                        }}
+                      >
+                        %
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  {/* RECOMMENDATION CHIP */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-end",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: "0.62rem",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        color: scoreTheme.text,
+                        opacity: 0.65,
+                        mb: 0.5,
+                      }}
+                    >
+                      Status
+                    </Typography>
+                    <Chip
+                      label={recommendation}
+                      size="small"
+                      sx={{
+                        height: 28,
+                        bgcolor: scoreTheme.main,
+                        color: "#FFFFFF",
+                        fontWeight: 800,
+                        fontSize: "0.72rem",
+                        borderRadius: 1.5,
+                        boxShadow: `0 4px 12px ${alpha(scoreTheme.main, 0.25)}`,
+                        "& .MuiChip-label": { px: 1.2 },
+                      }}
+                    />
+                  </Box>
+                </Box>
+
+                {/* BOTTOM SECTION: PROGRESS & CONFIDENCE */}
+                <Box sx={{ mt: 2 }}>
+                  <LinearProgress
+                    variant="determinate"
+                    value={Math.min(Math.max(score, 0), 100)}
+                    sx={{
+                      height: 6,
+                      borderRadius: 5,
+                      bgcolor: alpha(scoreTheme.main, 0.14),
+                      "& .MuiLinearProgress-bar": {
+                        bgcolor: scoreTheme.main,
+                        borderRadius: 5,
+                      },
+                    }}
                   />
-                  <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1.5 }}>
-                    <Typography sx={{ fontSize: 12, color: colors.slate }}>Confidence</Typography>
-                    <Typography sx={{ fontSize: 12, fontWeight: 700, color: colors.ink }}>{confidence}</Typography>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mt: 1.2,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        color: scoreTheme.text,
+                        opacity: 0.72,
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Confidence Level
+                    </Typography>
+
+                    <Typography
+                      sx={{
+                        color: scoreTheme.text,
+                        fontSize: "0.78rem",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {confidence}
+                    </Typography>
                   </Box>
                 </Box>
               </Paper>
@@ -215,126 +552,320 @@ function CandidateAnalysis() {
           </Grid>
         </Paper>
 
-        {/* Main Content Layout */}
-        <Grid container spacing={3.5}>
-          {/* Left Column */}
+        {/* MAIN CONTENT */}
+        <Grid container spacing={{ xs: 3, md: 3.5 }}>
+          {/* LEFT COLUMN */}
           <Grid item xs={12} lg={8}>
             <Stack spacing={3.5}>
-              {/* Executive Evaluation */}
-              <Paper elevation={0} sx={{ p: 3.5, borderRadius: 4, bgcolor: colors.paperRaised, border: `1px solid ${colors.hairline}` }}>
-                <Typography sx={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 20, color: colors.ink, display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-                  <PsychologyRoundedIcon sx={{ color: colors.brass }} /> Executive Assessment
+              {/* EXECUTIVE ASSESSMENT */}
+              <Paper
+                elevation={0}
+                sx={{
+                  p: { xs: 2.5, md: 3.5 },
+                  borderRadius: 4,
+                  bgcolor: "#FFFFFF",
+                  border: "1px solid #E2E8F0",
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  fontWeight={800}
+                  color="#0F172A"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mb: 3,
+                    fontFamily: "Georgia, 'Times New Roman', serif",
+                    fontSize: "1.35rem",
+                  }}
+                >
+                  <PsychologyRoundedIcon color="primary" />
+                  Executive Assessment
                 </Typography>
 
                 <Stack spacing={3}>
-                  <Box sx={{ p: 2.5, borderRadius: 2.5, bgcolor: colors.paper, border: `1px solid ${colors.hairline}` }}>
-                    <Typography sx={{ fontWeight: 700, color: colors.ink, fontSize: 13.5, mb: 0.75 }}>Role Fit Assessment</Typography>
-                    <Typography sx={{ color: colors.slate, lineHeight: 1.8, fontSize: 14 }}>{roleFit}</Typography>
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      borderRadius: 2.5,
+                      bgcolor: "#F8FAFC",
+                      border: "1px solid #F1F5F9",
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={700}
+                      color="#334155"
+                      gutterBottom
+                    >
+                      Role Fit Assessment
+                    </Typography>
+                    <Typography variant="body2" color="#64748B" sx={{ lineHeight: 1.8 }}>
+                      {roleFit}
+                    </Typography>
                   </Box>
 
                   <Box>
-                    <Typography sx={{ fontWeight: 700, color: colors.ink, fontSize: 13.5, mb: 0.75 }}>Decision Rationale</Typography>
-                    <Typography sx={{ color: colors.slate, lineHeight: 1.8, fontSize: 14 }}>{reason}</Typography>
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={700}
+                      color="#334155"
+                      gutterBottom
+                    >
+                      Decision Rationale
+                    </Typography>
+                    <Typography variant="body2" color="#64748B" sx={{ lineHeight: 1.8 }}>
+                      {reason}
+                    </Typography>
                   </Box>
                 </Stack>
               </Paper>
 
-              {/* Strengths / Gaps */}
+              {/* STRENGTHS + GAPS */}
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
-                  <Paper elevation={0} sx={{ p: 3, height: "100%", borderRadius: 3.5, bgcolor: colors.paperRaised, border: `1px solid ${colors.hairline}` }}>
-                    <Typography sx={{ fontWeight: 700, color: colors.ink, display: "flex", alignItems: "center", gap: 1, mb: 2, fontSize: 15 }}>
-                      <CheckCircleRoundedIcon sx={{ color: colors.teal }} fontSize="small" /> Key Strengths
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 3,
+                      height: "100%",
+                      borderRadius: 3.5,
+                      bgcolor: "#FFFFFF",
+                      border: "1px solid #E2E8F0",
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={700}
+                      color="#0F172A"
+                      sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
+                    >
+                      <CheckCircleRoundedIcon color="success" fontSize="small" />
+                      Key Strengths
                     </Typography>
+
                     {strengths.length > 0 ? (
                       <Stack spacing={1.5}>
-                        {strengths.map((str, idx) => (
-                          <Box key={idx} sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
-                            <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: colors.teal, mt: 1, flexShrink: 0 }} />
-                            <Typography sx={{ color: colors.slate, lineHeight: 1.6, fontSize: 14 }}>{str}</Typography>
+                        {strengths.map((strength, index) => (
+                          <Box key={index} sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+                            <Box
+                              sx={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: "50%",
+                                bgcolor: "success.main",
+                                mt: 1,
+                                flexShrink: 0,
+                              }}
+                            />
+                            <Typography variant="body2" color="#475569" sx={{ lineHeight: 1.6 }}>
+                              {strength}
+                            </Typography>
                           </Box>
                         ))}
                       </Stack>
                     ) : (
-                      <Typography sx={{ color: colors.slateFaint, fontSize: 14 }}>No distinct strengths highlighted.</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        No distinct strengths highlighted.
+                      </Typography>
                     )}
                   </Paper>
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                  <Paper elevation={0} sx={{ p: 3, height: "100%", borderRadius: 3.5, bgcolor: colors.paperRaised, border: `1px solid ${colors.hairline}` }}>
-                    <Typography sx={{ fontWeight: 700, color: colors.ink, display: "flex", alignItems: "center", gap: 1, mb: 2, fontSize: 15 }}>
-                      <WarningAmberRoundedIcon sx={{ color: colors.amber }} fontSize="small" /> Identified Gaps
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 3,
+                      height: "100%",
+                      borderRadius: 3.5,
+                      bgcolor: "#FFFFFF",
+                      border: "1px solid #E2E8F0",
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={700}
+                      color="#0F172A"
+                      sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
+                    >
+                      <WarningAmberRoundedIcon color="warning" fontSize="small" />
+                      Identified Gaps
                     </Typography>
+
                     {gaps.length > 0 ? (
                       <Stack spacing={1.5}>
-                        {gaps.map((gap, idx) => (
-                          <Box key={idx} sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
-                            <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: colors.amber, mt: 1, flexShrink: 0 }} />
-                            <Typography sx={{ color: colors.slate, lineHeight: 1.6, fontSize: 14 }}>{gap}</Typography>
+                        {gaps.map((gap, index) => (
+                          <Box key={index} sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+                            <Box
+                              sx={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: "50%",
+                                bgcolor: "warning.main",
+                                mt: 1,
+                                flexShrink: 0,
+                              }}
+                            />
+                            <Typography variant="body2" color="#475569" sx={{ lineHeight: 1.6 }}>
+                              {gap}
+                            </Typography>
                           </Box>
                         ))}
                       </Stack>
                     ) : (
-                      <Typography sx={{ color: colors.slateFaint, fontSize: 14 }}>No major gaps identified against the requirements.</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        No critical gaps identified.
+                      </Typography>
                     )}
                   </Paper>
                 </Grid>
-
-                {criticalMissing.length > 0 && (
-                  <Grid item xs={12}>
-                    <Paper elevation={0} sx={{ p: 3, borderRadius: 3.5, bgcolor: colors.crimsonSoft, border: `1px solid ${colors.crimson}33` }}>
-                      <Typography sx={{ fontWeight: 700, color: colors.crimson, display: "flex", alignItems: "center", gap: 1, mb: 1.5, fontSize: 15 }}>
-                        <ErrorOutlineRoundedIcon fontSize="small" /> Critical Missing Requirements
-                      </Typography>
-                      <Stack spacing={1}>
-                        {criticalMissing.map((req, idx) => (
-                          <Typography key={idx} sx={{ color: colors.crimson, fontWeight: 500, fontSize: 14 }}>
-                            • {req}
-                          </Typography>
-                        ))}
-                      </Stack>
-                    </Paper>
-                  </Grid>
-                )}
-
-                {compensatingFactors.length > 0 && (
-                  <Grid item xs={12}>
-                    <Paper elevation={0} sx={{ p: 3, borderRadius: 3.5, bgcolor: colors.tealSoft, border: `1px solid ${colors.teal}33` }}>
-                      <Typography sx={{ fontWeight: 700, color: colors.teal, display: "flex", alignItems: "center", gap: 1, mb: 1.5, fontSize: 15 }}>
-                        <AutoAwesomeRoundedIcon fontSize="small" /> Compensating Factors
-                      </Typography>
-                      <Stack spacing={1}>
-                        {compensatingFactors.map((factor, idx) => (
-                          <Typography key={idx} sx={{ color: colors.teal, fontSize: 14 }}>
-                            ✓ {factor}
-                          </Typography>
-                        ))}
-                      </Stack>
-                    </Paper>
-                  </Grid>
-                )}
               </Grid>
 
-              {/* Factor Breakdown */}
+              {/* ADDITIONAL FACTORS & CRITICAL REQUIREMENTS */}
+              {(compensatingFactors.length > 0 || criticalMissing.length > 0) && (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: { xs: 2.5, md: 3 },
+                    borderRadius: 3.5,
+                    bgcolor: "#FFFFFF",
+                    border: "1px solid #E2E8F0",
+                  }}
+                >
+                  <Grid container spacing={3}>
+                    {compensatingFactors.length > 0 && (
+                      <Grid item xs={12} md={criticalMissing.length > 0 ? 6 : 12}>
+                        <Typography
+                          variant="subtitle2"
+                          fontWeight={700}
+                          color="#0F172A"
+                          gutterBottom
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <StarRoundedIcon sx={{ color: "#F59E0B", fontSize: 20 }} />
+                          Compensating Factors
+                        </Typography>
+                        <Stack spacing={1} sx={{ mt: 1.5 }}>
+                          {compensatingFactors.map((factor, idx) => (
+                            <Typography key={idx} variant="body2" color="#475569" sx={{ lineHeight: 1.6 }}>
+                              • {factor}
+                            </Typography>
+                          ))}
+                        </Stack>
+                      </Grid>
+                    )}
+
+                    {criticalMissing.length > 0 && (
+                      <Grid item xs={12} md={compensatingFactors.length > 0 ? 6 : 12}>
+                        <Typography
+                          variant="subtitle2"
+                          fontWeight={700}
+                          color="#0F172A"
+                          gutterBottom
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <ErrorOutlineRoundedIcon color="error" sx={{ fontSize: 20 }} />
+                          Critical Missing Requirements
+                        </Typography>
+                        <Stack spacing={1} sx={{ mt: 1.5 }}>
+                          {criticalMissing.map((item, idx) => (
+                            <Typography key={idx} variant="body2" color="#475569" sx={{ lineHeight: 1.6 }}>
+                              • {item}
+                            </Typography>
+                          ))}
+                        </Stack>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Paper>
+              )}
+
+              {/* FACTOR BREAKDOWN */}
               {Object.keys(factorAnalysis).length > 0 && (
-                <Paper elevation={0} sx={{ p: 3.5, borderRadius: 4, bgcolor: colors.paperRaised, border: `1px solid ${colors.hairline}` }}>
-                  <Typography sx={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 19, color: colors.ink }}>
-                    Contextual Factor Evaluation
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: { xs: 2.5, md: 3.5 },
+                    borderRadius: 4,
+                    bgcolor: "#FFFFFF",
+                    border: "1px solid #E2E8F0",
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    fontWeight={800}
+                    color="#0F172A"
+                    sx={{
+                      mb: 3,
+                      fontFamily: "Georgia, 'Times New Roman', serif",
+                      fontSize: "1.25rem",
+                    }}
+                  >
+                    Evaluation Factor Analysis
                   </Typography>
-                  <Typography sx={{ color: colors.slate, mt: 0.5, mb: 3, fontSize: 13.5 }}>
-                    Holistic synthesis of candidate dimensions evaluated concurrently against core requirements.
-                  </Typography>
-                  <Divider sx={{ mb: 2, borderColor: colors.hairline }} />
-                  <Stack spacing={2}>
-                    {Object.entries(factorAnalysis).map(([factor, analysisText]) => {
-                      if (!analysisText) return null;
+
+                  <Stack spacing={2.5}>
+                    {Object.entries(factorAnalysis).map(([key, factor]) => {
+                      const factorScore = Number(factor?.score || 0);
+                      const factorTheme = getScoreTheme(factorScore);
+
                       return (
-                        <Box key={factor} sx={{ p: 2, borderRadius: 2, bgcolor: colors.paper, border: `1px solid ${colors.hairline}` }}>
-                          <Typography sx={{ fontWeight: 700, color: colors.ink, fontSize: 13.5 }}>{formatFactorName(factor)}</Typography>
-                          <Typography sx={{ color: colors.slate, mt: 0.5, lineHeight: 1.7, fontSize: 14 }}>
-                            {typeof analysisText === "string" ? analysisText : JSON.stringify(analysisText)}
-                          </Typography>
+                        <Box
+                          key={key}
+                          sx={{
+                            p: 2,
+                            borderRadius: 2.5,
+                            bgcolor: "#F8FAFC",
+                            border: "1px solid #F1F5F9",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              mb: 1,
+                            }}
+                          >
+                            <Typography variant="subtitle2" fontWeight={700} color="#334155">
+                              {formatFactorName(key)}
+                            </Typography>
+
+                            <Chip
+                              label={`${factorScore}%`}
+                              size="small"
+                              sx={{
+                                bgcolor: factorTheme.bg,
+                                color: factorTheme.text,
+                                fontWeight: 800,
+                                height: 24,
+                                fontSize: "0.75rem",
+                              }}
+                            />
+                          </Box>
+
+                          <LinearProgress
+                            variant="determinate"
+                            value={Math.min(Math.max(factorScore, 0), 100)}
+                            sx={{
+                              height: 6,
+                              borderRadius: 3,
+                              bgcolor: "#E2E8F0",
+                              mb: 1.5,
+                              "& .MuiLinearProgress-bar": {
+                                bgcolor: factorTheme.main,
+                                borderRadius: 3,
+                              },
+                            }}
+                          />
+
+                          {factor.notes && (
+                            <Typography variant="body2" color="#64748B">
+                              {factor.notes}
+                            </Typography>
+                          )}
                         </Box>
                       );
                     })}
@@ -342,251 +873,225 @@ function CandidateAnalysis() {
                 </Paper>
               )}
 
-              {/* Profile Background Tabs */}
-              <Paper elevation={0} sx={{ borderRadius: 4, bgcolor: colors.paperRaised, border: `1px solid ${colors.hairline}`, overflow: "hidden" }}>
-                <Tabs
-                  value={profileTab}
-                  onChange={(e, val) => setProfileTab(val)}
-                  variant="scrollable"
-                  scrollButtons="auto"
-                  TabIndicatorProps={{ style: { backgroundColor: colors.brass, height: 2.5 } }}
-                  sx={{
-                    borderBottom: `1px solid ${colors.hairline}`,
-                    px: 2,
-                    "& .MuiTab-root": { fontWeight: 700, minHeight: 52, color: colors.slate },
-                    "& .Mui-selected": { color: `${colors.ink} !important` },
-                  }}
-                >
-                  <Tab icon={<WorkRoundedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Experience" />
-                  <Tab icon={<StarRoundedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Skills" />
-                  <Tab icon={<FolderSpecialRoundedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Projects" />
-                  <Tab icon={<SchoolRoundedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Education & Certs" />
-                  {resume.resume_text && (
-                    <Tab icon={<DescriptionRoundedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Raw Resume" />
-                  )}
-                </Tabs>
-
-                <Box sx={{ p: 3.5 }}>
-                  {/* Experience */}
-                  {profileTab === 0 && (
-                    <Box>
-                      {experienceList.length > 0 ? (
-                        <Stack spacing={3}>
-                          {experienceList.map((exp, idx) => (
-                            <Box key={idx} sx={{ position: "relative", pl: 2, borderLeft: `2px solid ${colors.hairlineStrong}` }}>
-                              <Typography sx={{ fontWeight: 700, color: colors.ink, fontSize: 15.5 }}>
-                                {exp.title || exp.role || exp.designation || "Role"}
-                              </Typography>
-                              <Typography sx={{ color: colors.brassDark, fontWeight: 700, fontSize: 13.5 }}>
-                                {exp.company || "Company Not Listed"}
-                              </Typography>
-                              <Typography sx={{ fontFamily: mono, fontSize: 11.5, color: colors.slateFaint }}>
-                                {exp.dates || exp.duration || ""}
-                              </Typography>
-                              {Array.isArray(exp.description) ? (
-                                <Stack spacing={0.5} sx={{ mt: 1 }}>
-                                  {exp.description.map((desc, dIdx) => (
-                                    <Typography key={dIdx} sx={{ color: colors.slate, fontSize: 14 }}>
-                                      • {desc}
-                                    </Typography>
-                                  ))}
-                                </Stack>
-                              ) : (
-                                exp.description && (
-                                  <Typography sx={{ color: colors.slate, mt: 1, fontSize: 14 }}>{exp.description}</Typography>
-                                )
-                              )}
-                            </Box>
-                          ))}
-                        </Stack>
-                      ) : (
-                        <Typography sx={{ color: colors.slateFaint, fontSize: 14 }}>No experience records found.</Typography>
-                      )}
-                    </Box>
-                  )}
-
-                  {/* Skills */}
-                  {profileTab === 1 && (
-                    <Box>
-                      {skills.length > 0 ? (
-                        <Stack direction="row" flexWrap="wrap" useFlexGap gap={1}>
-                          {skills.map((skill, idx) => (
-                            <Chip
-                              key={idx}
-                              label={skill}
-                              sx={{ bgcolor: colors.paper, border: `1px solid ${colors.hairline}`, color: colors.ink, fontWeight: 600 }}
-                            />
-                          ))}
-                        </Stack>
-                      ) : (
-                        <Typography sx={{ color: colors.slateFaint, fontSize: 14 }}>No parsed skills available.</Typography>
-                      )}
-                    </Box>
-                  )}
-
-                  {/* Projects */}
-                  {profileTab === 2 && (
-                    <Box>
-                      {projects.length > 0 ? (
-                        <Stack spacing={3}>
-                          {projects.map((proj, idx) => (
-                            <Box key={idx} sx={{ p: 2.5, borderRadius: 2.5, bgcolor: colors.paper, border: `1px solid ${colors.hairline}` }}>
-                              <Typography sx={{ fontWeight: 700, color: colors.ink, fontSize: 15 }}>
-                                {proj.title || proj.name || "Project"}
-                              </Typography>
-                              {Array.isArray(proj.technologies) && (
-                                <Stack direction="row" flexWrap="wrap" useFlexGap gap={0.5} sx={{ my: 1 }}>
-                                  {proj.technologies.map((tech, tIdx) => (
-                                    <Chip
-                                      key={tIdx}
-                                      label={tech}
-                                      size="small"
-                                      sx={{ fontSize: "0.7rem", height: 22, bgcolor: colors.brassSoft, color: colors.brassDark }}
-                                    />
-                                  ))}
-                                </Stack>
-                              )}
-                              {Array.isArray(proj.description) ? (
-                                <Stack spacing={0.5} sx={{ mt: 1 }}>
-                                  {proj.description.map((desc, dIdx) => (
-                                    <Typography key={dIdx} sx={{ color: colors.slate, fontSize: 14 }}>
-                                      • {desc}
-                                    </Typography>
-                                  ))}
-                                </Stack>
-                              ) : (
-                                proj.description && (
-                                  <Typography sx={{ color: colors.slate, mt: 1, fontSize: 14 }}>{proj.description}</Typography>
-                                )
-                              )}
-                            </Box>
-                          ))}
-                        </Stack>
-                      ) : (
-                        <Typography sx={{ color: colors.slateFaint, fontSize: 14 }}>No project records found.</Typography>
-                      )}
-                    </Box>
-                  )}
-
-                  {/* Education & Certs */}
-                  {profileTab === 3 && (
-                    <Grid container spacing={3}>
-                      <Grid item xs={12} md={6}>
-                        <Typography sx={{ fontWeight: 700, color: colors.ink, fontSize: 14, mb: 1 }}>Academic Background</Typography>
-                        {educationList.length > 0 ? (
-                          <Stack spacing={2} sx={{ mt: 1 }}>
-                            {educationList.map((edu, idx) => (
-                              <Box key={idx}>
-                                <Typography sx={{ fontWeight: 700, color: colors.ink, fontSize: 14 }}>
-                                  {typeof edu === "string" ? edu : edu.degree || edu.qualification || "Degree"}
-                                </Typography>
-                                {typeof edu === "object" && (
-                                  <Typography sx={{ fontFamily: mono, fontSize: 11.5, color: colors.slateFaint }} display="block">
-                                    {edu.institution || edu.university || ""}
-                                  </Typography>
-                                )}
-                              </Box>
-                            ))}
-                          </Stack>
-                        ) : (
-                          <Typography sx={{ color: colors.slateFaint, fontSize: 14 }}>Not Available</Typography>
-                        )}
-                      </Grid>
-
-                      <Grid item xs={12} md={6}>
-                        <Typography sx={{ fontWeight: 700, color: colors.ink, fontSize: 14, mb: 1 }}>Certifications</Typography>
-                        {certifications.length > 0 ? (
-                          <Stack spacing={1} sx={{ mt: 1 }}>
-                            {certifications.map((cert, idx) => (
-                              <Typography key={idx} sx={{ color: colors.slate, display: "flex", alignItems: "center", gap: 1, fontSize: 14 }}>
-                                <WorkspacePremiumRoundedIcon sx={{ color: colors.brass }} fontSize="small" />
-                                {typeof cert === "object" ? cert.name || cert.title : cert}
-                              </Typography>
-                            ))}
-                          </Stack>
-                        ) : (
-                          <Typography sx={{ color: colors.slateFaint, fontSize: 14 }}>No certifications recorded.</Typography>
-                        )}
-                      </Grid>
-                    </Grid>
-                  )}
-
-                  {/* Raw Resume */}
-                  {profileTab === 4 && resume.resume_text && (
-                    <Box
-                      sx={{
-                        p: 2.5,
-                        borderRadius: 2.5,
-                        bgcolor: colors.paper,
-                        border: `1px solid ${colors.hairline}`,
-                        maxHeight: 500,
-                        overflowY: "auto",
-                        fontFamily: mono,
-                        fontSize: "0.85rem",
-                        color: colors.slate,
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      {resume.resume_text}
-                    </Box>
-                  )}
-                </Box>
-              </Paper>
+              {/* JD ANALYSIS (IF AVAILABLE) */}
+              {jobAnalysis && Object.keys(jobAnalysis).length > 0 && (
+                <JDAnalysis jobAnalysis={jobAnalysis} />
+              )}
             </Stack>
           </Grid>
 
-          {/* Right Column */}
+          {/* RIGHT COLUMN: CANDIDATE PROFILE DETAILS */}
           <Grid item xs={12} lg={4}>
-            <Stack spacing={3} sx={{ position: { lg: "sticky" }, top: 24 }}>
-              <Box sx={{ bgcolor: colors.paperRaised, borderRadius: 4, border: `1px solid ${colors.hairline}`, p: 3 }}>
-                <JDAnalysis analysis={jobAnalysis} />
-              </Box>
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 2.5, md: 3 },
+                borderRadius: 4,
+                bgcolor: "#FFFFFF",
+                border: "1px solid #E2E8F0",
+                position: { lg: "sticky" },
+                top: { lg: 24 },
+              }}
+            >
+              <Typography
+                variant="h6"
+                fontWeight={800}
+                color="#0F172A"
+                sx={{
+                  mb: 2,
+                  fontFamily: "Georgia, 'Times New Roman', serif",
+                  fontSize: "1.2rem",
+                }}
+              >
+                Profile Details
+              </Typography>
 
-              {/* Contact */}
-              <Paper elevation={0} sx={{ p: 3, borderRadius: 3.5, bgcolor: colors.paperRaised, border: `1px solid ${colors.hairline}` }}>
-                <Typography sx={{ fontWeight: 700, color: colors.ink, mb: 2, fontSize: 15 }}>Candidate Contact</Typography>
-                <Stack spacing={2}>
-                  <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
-                    <Avatar sx={{ width: 34, height: 34, bgcolor: colors.paper, color: colors.slate }}>
-                      <EmailRoundedIcon fontSize="small" />
-                    </Avatar>
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography sx={{ fontFamily: mono, fontSize: 10.5, color: colors.slateFaint, letterSpacing: "0.06em" }} display="block">
-                        EMAIL ADDRESS
-                      </Typography>
-                      <Typography sx={{ fontWeight: 700, color: colors.ink, fontSize: 13.5 }} noWrap>
-                        {email}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ display: "flex", gap: 1.5, alignItems: "center" }}>
-                    <Avatar sx={{ width: 34, height: 34, bgcolor: colors.paper, color: colors.slate }}>
-                      <PhoneRoundedIcon fontSize="small" />
-                    </Avatar>
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography sx={{ fontFamily: mono, fontSize: 10.5, color: colors.slateFaint, letterSpacing: "0.06em" }} display="block">
-                        PHONE NUMBER
-                      </Typography>
-                      <Typography sx={{ fontWeight: 700, color: colors.ink, fontSize: 13.5 }} noWrap>
-                        {phone}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Stack>
-              </Paper>
-
-              {/* Policy note */}
-              <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, bgcolor: colors.paper, border: `1px dashed ${colors.hairlineStrong}` }}>
-                <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
-                  <InfoOutlinedIcon sx={{ fontSize: 18, color: colors.slateFaint, mt: 0.2 }} />
-                  <Typography sx={{ color: colors.slate, lineHeight: 1.6, fontSize: 12 }}>
-                    Fit score represents contextual qualification mapping factoring in overlapping skillset domains,
-                    seniority trajectory, and project scale rather than isolated keyword matches.
+              {/* Contact Information */}
+              <Stack spacing={1.5} sx={{ mb: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <EmailRoundedIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                  <Typography
+                    variant="body2"
+                    color="text.primary"
+                    sx={{ wordBreak: "break-all", fontWeight: 500 }}
+                  >
+                    {email}
                   </Typography>
                 </Box>
-              </Paper>
-            </Stack>
+
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <PhoneRoundedIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                  <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
+                    {phone}
+                  </Typography>
+                </Box>
+              </Stack>
+
+              <Divider sx={{ mb: 2 }} />
+
+              {/* Tabs Navigation */}
+              <Tabs
+                value={profileTab}
+                onChange={(e, newValue) => setProfileTab(newValue)}
+                variant="fullWidth"
+                sx={{
+                  mb: 2.5,
+                  minHeight: 36,
+                  "& .MuiTab-root": {
+                    minHeight: 36,
+                    py: 0.5,
+                    fontSize: "0.78rem",
+                    fontWeight: 700,
+                    textTransform: "none",
+                  },
+                }}
+              >
+                <Tab label="Skills" />
+                <Tab label="Experience" />
+                <Tab label="More" />
+              </Tabs>
+
+              {/* Tab 0: Skills */}
+              {profileTab === 0 && (
+                <Box>
+                  {skills.length > 0 ? (
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      {skills.map((skill, idx) => (
+                        <Chip
+                          key={idx}
+                          label={
+                            typeof skill === "object"
+                              ? skill.name || skill.skill
+                              : skill
+                          }
+                          size="small"
+                          sx={{
+                            bgcolor: "#F1F5F9",
+                            color: "#334155",
+                            fontWeight: 600,
+                            fontSize: "0.75rem",
+                            borderRadius: 1.5,
+                          }}
+                        />
+                      ))}
+                    </Stack>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No skills listed.
+                    </Typography>
+                  )}
+                </Box>
+              )}
+
+              {/* Tab 1: Experience */}
+              {profileTab === 1 && (
+                <Stack spacing={2}>
+                  {experienceList.length > 0 ? (
+                    experienceList.map((exp, idx) => (
+                      <Box key={idx}>
+                        <Typography variant="subtitle2" fontWeight={700} color="#0F172A">
+                          {exp.title || exp.designation || "Role"}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          {exp.company || exp.organization}
+                          {exp.duration ? ` • ${exp.duration}` : ""}
+                        </Typography>
+                        {exp.description && (
+                          <Typography
+                            variant="body2"
+                            color="#64748B"
+                            sx={{ mt: 0.5, fontSize: "0.8rem", lineHeight: 1.5 }}
+                          >
+                            {exp.description}
+                          </Typography>
+                        )}
+                      </Box>
+                    ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No experience records available.
+                    </Typography>
+                  )}
+                </Stack>
+              )}
+
+              {/* Tab 2: Projects & Certifications */}
+              {profileTab === 2 && (
+                <Stack spacing={2.5}>
+                  {projects.length > 0 && (
+                    <Box>
+                      <Typography
+                        variant="caption"
+                        fontWeight={800}
+                        color="text.secondary"
+                        sx={{
+                          textTransform: "uppercase",
+                          letterSpacing: "0.08em",
+                          display: "block",
+                          mb: 1,
+                        }}
+                      >
+                        Projects
+                      </Typography>
+                      <Stack spacing={1.5}>
+                        {projects.map((proj, idx) => (
+                          <Box key={idx}>
+                            <Typography variant="body2" fontWeight={700} color="#0F172A">
+                              {proj.name || proj.title || "Project"}
+                            </Typography>
+                            {proj.description && (
+                              <Typography
+                                variant="caption"
+                                color="#64748B"
+                                sx={{ display: "block", lineHeight: 1.4 }}
+                              >
+                                {proj.description}
+                              </Typography>
+                            )}
+                          </Box>
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
+
+                  {certifications.length > 0 && (
+                    <Box>
+                      <Typography
+                        variant="caption"
+                        fontWeight={800}
+                        color="text.secondary"
+                        sx={{
+                          textTransform: "uppercase",
+                          letterSpacing: "0.08em",
+                          display: "block",
+                          mb: 1,
+                        }}
+                      >
+                        Certifications
+                      </Typography>
+                      <Stack spacing={1}>
+                        {certifications.map((cert, idx) => (
+                          <Typography
+                            key={idx}
+                            variant="body2"
+                            color="#334155"
+                            sx={{ fontSize: "0.82rem" }}
+                          >
+                            • {typeof cert === "object" ? cert.name || cert.title : cert}
+                          </Typography>
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
+
+                  {projects.length === 0 && certifications.length === 0 && (
+                    <Typography variant="body2" color="text.secondary">
+                      No additional project or certification records.
+                    </Typography>
+                  )}
+                </Stack>
+              )}
+            </Paper>
           </Grid>
         </Grid>
       </Container>

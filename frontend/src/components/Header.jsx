@@ -57,7 +57,7 @@ function Header() {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: colors.slateFaint, fontSize: 19 }} />
+                <SearchIcon sx={{ color: colors.slate, fontSize: 19 }} />
               </InputAdornment>
             ),
           }}
@@ -70,14 +70,14 @@ function Header() {
             disableElevation
             startIcon={<AddRoundedIcon />}
             sx={{
-              bgcolor: colors.ink,
-              color: "#F4F2EC",
+              bgcolor: colors.brassDark,
+              color: "#FFFFFF",
               borderRadius: "8px",
               px: 2.25,
               py: 0.9,
               fontSize: "0.85rem",
               fontWeight: 700,
-              "&:hover": { bgcolor: colors.inkSoft },
+              "&:hover": { bgcolor: colors.ink },
             }}
           >
             Create JD
@@ -98,12 +98,12 @@ function Header() {
             </Badge>
           </IconButton>
 
-          <Divider orientation="vertical" flexItem sx={{ height: 24, my: "auto", mx: 0.5 }} />
+          <Divider orientation="vertical" flexItem sx={{ height: 24, my: "auto", mx: 0.5, borderColor: colors.hairline }} />
 
-          {/* Recruiter identity */}
+          {/* Recruiter Identity */}
           <Button
             disableRipple
-            endIcon={<KeyboardArrowDownRoundedIcon sx={{ color: colors.slateFaint }} />}
+            endIcon={<KeyboardArrowDownRoundedIcon sx={{ color: colors.slate }} />}
             sx={{ p: 0.5, pr: 1, borderRadius: "8px", "&:hover": { bgcolor: colors.paper } }}
           >
             <Stack direction="row" spacing={1.25} alignItems="center">
@@ -124,7 +124,7 @@ function Header() {
                 <Typography variant="body2" sx={{ fontWeight: 700, color: colors.ink, lineHeight: 1.2 }}>
                   Alex Morgan
                 </Typography>
-                <Typography sx={{ fontFamily: mono, fontSize: "0.68rem", color: colors.slateFaint, letterSpacing: "0.04em" }}>
+                <Typography sx={{ fontFamily: mono, fontSize: "0.68rem", color: colors.slate, letterSpacing: "0.04em" }}>
                   LEAD RECRUITER
                 </Typography>
               </Box>
