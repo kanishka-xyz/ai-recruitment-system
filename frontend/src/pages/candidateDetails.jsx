@@ -20,6 +20,7 @@ import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import PsychologyRoundedIcon from "@mui/icons-material/PsychologyRounded";
 import SpeedRoundedIcon from "@mui/icons-material/SpeedRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import WorkRoundedIcon from "@mui/icons-material/WorkRounded";
 
 import { colors } from "../theme/theme.js";
@@ -44,7 +45,9 @@ function toArray(value) {
 }
 
 
-function Section({ icon, title, children }) {
+function Section({ icon, title, children, defaultOpen = true, badge }) {
+  const [open, setOpen] = React.useState(defaultOpen);
+
   return (
     <Card
       elevation={0}
@@ -54,17 +57,31 @@ function Section({ icon, title, children }) {
         overflow: "hidden",
         background: "#FFFFFF",
         height: "100%",
+        transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+        "&:hover": {
+          borderColor: "#CBD5DF",
+          boxShadow: "0 4px 18px rgba(31, 45, 61, 0.05)",
+        },
       }}
     >
       <Box
+        component="button"
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
         sx={{
+          width: "100%",
+          border: 0,
+          cursor: "pointer",
+          textAlign: "left",
           px: 3,
           py: 2,
           display: "flex",
           alignItems: "center",
           gap: 1.2,
           background: "#FAFBFC",
-          borderBottom: "1px solid #EDF0F3",
+          borderBottom: open ? "1px solid #EDF0F3" : "none",
+          color: "inherit",
         }}
       >
         <Box
@@ -77,6 +94,7 @@ function Section({ icon, title, children }) {
             justifyContent: "center",
             background: "#EDF2F7",
             color: "#607A96",
+            flexShrink: 0,
           }}
         >
           {icon}
@@ -84,6 +102,7 @@ function Section({ icon, title, children }) {
 
         <Typography
           sx={{
+            flex: 1,
             fontSize: 15,
             fontWeight: 800,
             color: "#26313C",
@@ -91,9 +110,31 @@ function Section({ icon, title, children }) {
         >
           {title}
         </Typography>
+
+        {badge && (
+          <Chip
+            size="small"
+            label={badge}
+            sx={{
+              height: 24,
+              fontSize: 11,
+              fontWeight: 700,
+              background: "#EEF3F7",
+              color: "#607080",
+            }}
+          />
+        )}
+
+        <ExpandMoreRoundedIcon
+          sx={{
+            color: "#82909D",
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.2s ease",
+          }}
+        />
       </Box>
 
-      <Box sx={{ p: 3 }}>{children}</Box>
+      {open && <Box sx={{ p: 3 }}>{children}</Box>}
     </Card>
   );
 }
@@ -121,6 +162,9 @@ function ListSection({ items, emptyText, positive = false }) {
               item?.name ||
               JSON.stringify(item);
 
+        const [expanded, setExpanded] = React.useState(false);
+        const long = text.length > 180;
+
         return (
           <Box
             key={index}
@@ -128,11 +172,15 @@ function ListSection({ items, emptyText, positive = false }) {
               display: "flex",
               gap: 1,
               alignItems: "flex-start",
+              p: 1.3,
+              borderRadius: 2,
+              background: "#F8FAFB",
+              border: "1px solid #E9EDF1",
             }}
           >
             <Box
               sx={{
-                mt: "3px",
+                mt: "7px",
                 width: 7,
                 height: 7,
                 borderRadius: "50%",
@@ -141,15 +189,39 @@ function ListSection({ items, emptyText, positive = false }) {
               }}
             />
 
-            <Typography
-              sx={{
-                fontSize: 14,
-                lineHeight: 1.65,
-                color: "#46535F",
-              }}
-            >
-              {text}
-            </Typography>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography
+                sx={{
+                  fontSize: 14,
+                  lineHeight: 1.65,
+                  color: "#46535F",
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  WebkitLineClamp: expanded || !long ? "unset" : 3,
+                  overflow: "hidden",
+                }}
+              >
+                {text}
+              </Typography>
+
+              {long && (
+                <Button
+                  size="small"
+                  onClick={() => setExpanded((value) => !value)}
+                  sx={{
+                    mt: 0.3,
+                    minWidth: 0,
+                    p: 0,
+                    textTransform: "none",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "#55718F",
+                  }}
+                >
+                  {expanded ? "Show less" : "Read more"}
+                </Button>
+              )}
+            </Box>
           </Box>
         );
       })}
@@ -203,6 +275,115 @@ function MetricCard({ icon, label, value, accent = "#55718F" }) {
         {value}
       </Typography>
     </Card>
+  );
+}
+
+
+function ScoreMeter({ score }) {
+  const safeScore = Math.max(0, Math.min(100, Number(score) || 0));
+
+  const label =
+    safeScore >= 80
+      ? "Strong fit"
+      : safeScore >= 60
+      ? "Good fit"
+      : safeScore >= 40
+      ? "Partial fit"
+      : "Low fit";
+
+  return (
+    <Box
+      sx={{
+        p: 2.5,
+        borderRadius: 3,
+        border: "1px solid #E1E6EB",
+        background: "#FFFFFF",
+        height: "100%",
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", mb: 1.5 }}>
+        <Box>
+          <Typography sx={{ fontSize: 11, fontWeight: 800, color: "#8995A1", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            Overall role fit
+          </Typography>
+          <Typography sx={{ mt: 0.3, fontSize: 34, fontWeight: 900, color: "#18212B", lineHeight: 1 }}>
+            {safeScore.toFixed(1)}
+            <Typography component="span" sx={{ fontSize: 14, color: "#8A95A1", fontWeight: 700 }}>
+              {" "} / 100
+            </Typography>
+          </Typography>
+        </Box>
+
+        <Chip
+          label={label}
+          size="small"
+          sx={{
+            fontWeight: 800,
+            background: safeScore >= 80 ? "#E8F4EF" : safeScore >= 60 ? "#F7F0DF" : "#F8ECEA",
+            color: safeScore >= 80 ? "#2E8066" : safeScore >= 60 ? "#8C6826" : "#A54E4E",
+          }}
+        />
+      </Box>
+
+      <Box sx={{ height: 10, borderRadius: 99, background: "#E9EEF2", overflow: "hidden" }}>
+        <Box
+          sx={{
+            width: `${safeScore}%`,
+            height: "100%",
+            borderRadius: 99,
+            background: safeScore >= 80 ? "#3E8F72" : safeScore >= 60 ? "#B58A3A" : "#B9685D",
+            transition: "width 0.6s ease",
+          }}
+        />
+      </Box>
+
+      <Typography sx={{ mt: 1.2, fontSize: 12.5, color: "#7A8792" }}>
+        This is the contextual AI assessment of the candidate against this job description.
+      </Typography>
+    </Box>
+  );
+}
+
+
+function QuickNav({ onJump }) {
+  const items = [
+    ["summary", "Summary"],
+    ["evidence", "Evidence"],
+    ["factors", "Factor analysis"],
+  ];
+
+  return (
+    <Box
+      sx={{
+        mb: 2.5,
+        p: 1,
+        borderRadius: 2.5,
+        border: "1px solid #E1E6EB",
+        background: "#FFFFFF",
+        display: "flex",
+        gap: 0.5,
+        flexWrap: "wrap",
+      }}
+    >
+      {items.map(([id, label]) => (
+        <Button
+          key={id}
+          size="small"
+          onClick={() => onJump(id)}
+          sx={{
+            px: 1.6,
+            py: 0.8,
+            borderRadius: 1.7,
+            textTransform: "none",
+            fontWeight: 750,
+            color: "#657482",
+            "&:hover": { background: "#F1F4F7", color: "#26313C" },
+          }}
+        >
+          {label}
+        </Button>
+      ))}
+    </Box>
   );
 }
 
@@ -427,6 +608,15 @@ function CandidateDetails() {
           </Box>
         </Card>
 
+        <QuickNav
+          onJump={(id) => {
+            document.getElementById(id)?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+        />
+
         {/* Main AI evaluation metrics */}
         <Grid container spacing={2} sx={{ mb: 2.5 }}>
           <Grid item xs={12} sm={6} md={3}>
@@ -502,7 +692,28 @@ function CandidateDetails() {
           </Stack>
         </Card>
 
+        <Box id="summary" sx={{ scrollMarginTop: 20, mb: 2.5 }}>
+          <Grid container spacing={2.5}>
+            <Grid item xs={12} md={5}>
+              <ScoreMeter score={score} />
+            </Grid>
+
+            <Grid item xs={12} md={7}>
+              <Section
+                icon={<PsychologyRoundedIcon fontSize="small" />}
+                title="What this means"
+                defaultOpen
+              >
+                <Typography sx={{ fontSize: 14, lineHeight: 1.8, color: "#52606D" }}>
+                  {candidate.reason || "No detailed evaluation reason was returned."}
+                </Typography>
+              </Section>
+            </Grid>
+          </Grid>
+        </Box>
+
         {/* Role fit + reason */}
+        <Box id="evidence" sx={{ scrollMarginTop: 20 }}>
         <Grid container spacing={2.5} sx={{ mb: 2.5 }}>
           <Grid item xs={12} md={5}>
             <Section
@@ -538,6 +749,7 @@ function CandidateDetails() {
             </Section>
           </Grid>
         </Grid>
+        </Box>
 
         {/* Strengths / gaps / compensation / critical */}
         <Grid container spacing={2.5} sx={{ mb: 2.5 }}>
@@ -593,10 +805,11 @@ function CandidateDetails() {
         </Grid>
 
         {/* Factor analysis */}
-        <Box sx={{ mb: 2.5 }}>
+        <Box id="factors" sx={{ mb: 2.5, scrollMarginTop: 20 }}>
           <Section
             icon={<PsychologyRoundedIcon fontSize="small" />}
             title="Contextual Factor Analysis"
+            defaultOpen
           >
             <Grid container spacing={2}>
               {[
