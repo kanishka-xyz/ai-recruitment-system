@@ -61,7 +61,7 @@ function Collapsible({ title, icon, children, defaultOpen = false }) {
       elevation={0}
       sx={{
         border: "1px solid #DDE4EA",
-        borderRadius: 3,
+        borderRadius: 2.5,
         overflow: "hidden",
         background: "#FFFFFF",
       }}
@@ -83,11 +83,12 @@ function Collapsible({ title, icon, children, defaultOpen = false }) {
           background: "#FFFFFF",
           textAlign: "left",
           color: "#17212B",
+          minHeight: 58,
           "&:hover": { background: "#F8FAFC" },
         }}
       >
         {icon}
-        <Typography sx={{ flex: 1, fontSize: 16, fontWeight: 800 }}>
+        <Typography sx={{ flex: 1, fontSize: 17, fontWeight: 900 }}>
           {title}
         </Typography>
         <ExpandMoreRoundedIcon
@@ -126,10 +127,12 @@ function Signal({ label, value, tone = "neutral" }) {
         py: 1.2,
         borderRadius: 2,
         background: s.bg,
-        minWidth: 145,
+        flex: "1 1 180px",
+        minWidth: 0,
+        border: "1px solid rgba(39,52,64,.08)",
       }}
     >
-      <Typography sx={{ fontSize: 11, fontWeight: 800, color: s.color, textTransform: "uppercase", letterSpacing: ".06em" }}>
+      <Typography sx={{ fontSize: 11, fontWeight: 900, color: s.color, textTransform: "uppercase", letterSpacing: ".06em" }}>
         {label}
       </Typography>
       <Typography sx={{ mt: .35, fontSize: 15, fontWeight: 800, color: "#17212B" }}>
@@ -145,7 +148,7 @@ function BulletGroup({ items, positive = false, limit = 3 }) {
 
   if (!shown.length) {
     return (
-      <Typography sx={{ color: "#687786", fontSize: 14 }}>
+      <Typography sx={{ color: "#334454", fontSize: 15 }}>
         No specific points returned.
       </Typography>
     );
@@ -170,13 +173,13 @@ function BulletGroup({ items, positive = false, limit = 3 }) {
           ) : (
             <WarningAmberRoundedIcon sx={{ mt: .15, fontSize: 18, color: "#B9685D" }} />
           )}
-          <Typography sx={{ fontSize: 14, lineHeight: 1.55, color: "#263440" }}>
+          <Typography sx={{ fontSize: 15, lineHeight: 1.6, color: "#263440" }}>
             {textOf(item)}
           </Typography>
         </Box>
       ))}
       {values.length > limit && (
-        <Typography sx={{ fontSize: 12, color: "#71808D", fontWeight: 700 }}>
+        <Typography sx={{ fontSize: 12, color: "#4D5D6B", fontWeight: 800 }}>
           +{values.length - limit} more — see detailed analysis below
         </Typography>
       )}
@@ -215,7 +218,7 @@ function ScoreRing({ score }) {
           <Typography sx={{ fontSize: 34, lineHeight: 1, fontWeight: 900, color: "#17212B" }}>
             {safe.toFixed(0)}
           </Typography>
-          <Typography sx={{ mt: .5, fontSize: 11, fontWeight: 800, color: "#73818E", textTransform: "uppercase" }}>
+          <Typography sx={{ mt: .5, fontSize: 11, fontWeight: 800, color: "#4B5B69", textTransform: "uppercase" }}>
             fit score
           </Typography>
         </Box>
@@ -244,7 +247,7 @@ function FactorBars({ factors }) {
             <Typography sx={{ fontSize: 13, fontWeight: 800, color: "#273540", textTransform: "capitalize" }}>
               {key.replaceAll("_", " ")}
             </Typography>
-            <Typography sx={{ fontSize: 12, color: "#657482" }}>
+            <Typography sx={{ fontSize: 12, color: "#425362" }}>
               evaluated
             </Typography>
           </Box>
@@ -261,7 +264,7 @@ function FactorBars({ factors }) {
               },
             }}
           />
-          <Typography sx={{ mt: .7, fontSize: 13, lineHeight: 1.55, color: "#596875" }}>
+          <Typography sx={{ mt: .7, fontSize: 13, lineHeight: 1.55, color: "#334454" }}>
             {String(value)}
           </Typography>
         </Box>
@@ -283,7 +286,7 @@ function CandidateDetails() {
           <Typography sx={{ mt: 1, fontSize: 22, fontWeight: 850, color: "#17212B" }}>
             No Evaluation Selected
           </Typography>
-          <Typography sx={{ mt: 1, color: "#62717F" }}>
+          <Typography sx={{ mt: 1, color: "#334454" }}>
             Select a candidate from the search results to view the AI assessment.
           </Typography>
           <Button
@@ -340,8 +343,8 @@ function CandidateDetails() {
     recommendationTone === "warning" ? "#8A641E" : "#A54E4E";
 
   return (
-    <Box sx={{ minHeight: "100vh", background: "#F5F7F9", py: { xs: 2, md: 4 } }}>
-      <Container maxWidth="lg" sx={{ px: { xs: 2, md: 3 } }}>
+    <Box sx={{ minHeight: "100vh", background: "#F3F6F8", py: { xs: 2, md: 4 } }}>
+      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 3 } }}>
         <Button
           startIcon={<ArrowBackRoundedIcon />}
           onClick={() => navigate("/results")}
@@ -354,7 +357,7 @@ function CandidateDetails() {
         <Card
           elevation={0}
           sx={{
-            border: "1px solid #DCE3E9",
+            border: "1px solid #D3DCE4",
             borderRadius: 3,
             overflow: "hidden",
             mb: 2,
@@ -362,7 +365,7 @@ function CandidateDetails() {
           }}
         >
           <Box sx={{ height: 5, background: "#55718F" }} />
-          <Box sx={{ p: { xs: 2.5, md: 3.5 } }}>
+          <Box sx={{ p: { xs: 2.5, md: 3 } }}>
             <Grid container spacing={3} alignItems="center">
               <Grid item xs={12} md={7}>
                 <Typography sx={{ fontSize: 12, fontWeight: 900, color: "#71808D", textTransform: "uppercase", letterSpacing: ".1em" }}>
@@ -371,7 +374,7 @@ function CandidateDetails() {
                 <Typography sx={{ mt: .7, fontSize: { xs: 27, md: 35 }, fontWeight: 900, color: "#17212B", letterSpacing: "-.03em" }}>
                   {name}
                 </Typography>
-                <Typography sx={{ mt: .8, fontSize: 15, color: "#5E6D7A" }}>
+                <Typography sx={{ mt: .8, fontSize: 15, color: "#334454" }}>
                   AI evaluation against the uploaded job description
                 </Typography>
               </Grid>
@@ -423,10 +426,10 @@ function CandidateDetails() {
               <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 2.5 }}>
                 <ScoreRing score={score} />
                 <Box>
-                  <Typography sx={{ fontSize: 16, fontWeight: 850, color: "#17212B" }}>
+                  <Typography sx={{ fontSize: 17, fontWeight: 900, color: "#17212B" }}>
                     Overall role fit
                   </Typography>
-                  <Typography sx={{ mt: .6, fontSize: 14, lineHeight: 1.6, color: "#5B6A77" }}>
+                  <Typography sx={{ mt: .6, fontSize: 15, lineHeight: 1.65, color: "#334454" }}>
                     {score >= 80
                       ? "The evaluation found strong alignment with the role."
                       : score >= 60
@@ -453,12 +456,28 @@ function CandidateDetails() {
                 Key signals
               </Typography>
 
-              <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1} sx={{ mt: 2 }}>
-                <Signal label="Confidence" value={confidence} tone="neutral" />
-                <Signal label="Semantic match" value={`${semanticScore.toFixed(1)}%`} tone={semanticScore >= 60 ? "positive" : "warning"} />
-                <Signal label="Strengths" value={`${strengths.length} identified`} tone="positive" />
-                <Signal label="Gaps" value={`${gaps.length} identified`} tone={gaps.length > 0 ? "warning" : "positive"} />
-              </Stack>
+              <Grid container spacing={1.2} sx={{ mt: 1.5 }}>
+                <Grid item xs={6}>
+                  <Signal label="Confidence" value={confidence} tone="neutral" />
+                </Grid>
+                <Grid item xs={6}>
+                  <Signal
+                    label="Semantic match"
+                    value={`${semanticScore.toFixed(1)}%`}
+                    tone={semanticScore >= 60 ? "positive" : "warning"}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <Signal label="Strengths" value={`${strengths.length} identified`} tone="positive" />
+                </Grid>
+                <Grid item xs={6}>
+                  <Signal
+                    label="Gaps"
+                    value={`${gaps.length} identified`}
+                    tone={gaps.length > 0 ? "warning" : "positive"}
+                  />
+                </Grid>
+              </Grid>
 
               {(contextualTime || geminiTime) && (
                 <Typography sx={{ mt: 2, fontSize: 12, color: "#71808D" }}>
@@ -504,7 +523,7 @@ function CandidateDetails() {
             icon={<PsychologyRoundedIcon sx={{ color: "#55718F" }} />}
             defaultOpen={false}
           >
-            <Typography sx={{ fontSize: 15, lineHeight: 1.75, color: "#263440" }}>
+            <Typography sx={{ fontSize: 16, lineHeight: 1.75, color: "#263440" }}>
               {candidate.reason || "No detailed reasoning was returned."}
             </Typography>
           </Collapsible>
@@ -561,9 +580,6 @@ function CandidateDetails() {
           </Collapsible>
         </Stack>
 
-        <Typography sx={{ mt: 3, mb: 1, textAlign: "center", fontSize: 12, color: "#81909D" }}>
-          AI assessment is a decision-support signal. Review the underlying candidate information before taking action.
-        </Typography>
       </Container>
     </Box>
   );
