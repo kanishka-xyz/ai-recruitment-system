@@ -103,7 +103,7 @@ function Section({ icon, title, children, defaultOpen = true, badge }) {
         <Typography
           sx={{
             flex: 1,
-            fontSize: 15,
+            fontSize: 17,
             fontWeight: 800,
             color: "#26313C",
           }}
@@ -145,7 +145,7 @@ function ListSection({ items, emptyText, positive = false }) {
 
   if (!values.length) {
     return (
-      <Typography sx={{ color: "#8B96A1", fontSize: 14 }}>
+      <Typography sx={{ color: "#8B96A1", fontSize: 15 }}>
         {emptyText}
       </Typography>
     );
@@ -192,9 +192,9 @@ function ListSection({ items, emptyText, positive = false }) {
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography
                 sx={{
-                  fontSize: 14,
-                  lineHeight: 1.65,
-                  color: "#46535F",
+                  fontSize: 15.5,
+                  lineHeight: 1.7,
+                  color: "#26313C",
                   display: "-webkit-box",
                   WebkitBoxOrient: "vertical",
                   WebkitLineClamp: expanded || !long ? "unset" : 3,
@@ -267,7 +267,7 @@ function MetricCard({ icon, label, value, accent = "#55718F" }) {
 
       <Typography
         sx={{
-          fontSize: 22,
+          fontSize: 25,
           fontWeight: 850,
           color: "#18212B",
         }}
@@ -337,7 +337,7 @@ function ScoreMeter({ score }) {
         />
       </Box>
 
-      <Typography sx={{ mt: 1.2, fontSize: 12.5, color: "#7A8792" }}>
+      <Typography sx={{ mt: 1.2, fontSize: 14, color: "#5E6B77" }}>
         This is the contextual AI assessment of the candidate against this job description.
       </Typography>
     </Box>
@@ -673,7 +673,7 @@ function CandidateDetails() {
             divider={<Divider orientation="vertical" flexItem />}
           >
             <Box>
-              <Typography sx={{ fontSize: 10, fontWeight: 800, color: "#8A95A1", textTransform: "uppercase" }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 800, color: "#8A95A1", textTransform: "uppercase" }}>
                 Gemini Response
               </Typography>
               <Typography sx={{ mt: 0.4, fontSize: 18, fontWeight: 800, color: "#26313C" }}>
@@ -722,9 +722,9 @@ function CandidateDetails() {
             >
               <Typography
                 sx={{
-                  fontSize: 14,
+                  fontSize: 16,
                   lineHeight: 1.8,
-                  color: "#52606D",
+                  color: "#26313C",
                 }}
               >
                 {candidate.role_fit || "No role-fit explanation available."}
@@ -846,9 +846,9 @@ function CandidateDetails() {
 
                     <Typography
                       sx={{
-                        fontSize: 13.5,
-                        lineHeight: 1.7,
-                        color: "#46535F",
+                        fontSize: 15,
+                        lineHeight: 1.75,
+                        color: "#26313C",
                       }}
                     >
                       {factorAnalysis[key] ||
