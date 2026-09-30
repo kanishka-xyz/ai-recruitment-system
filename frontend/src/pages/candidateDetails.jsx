@@ -6,24 +6,24 @@ import {
   Button,
   Card,
   Chip,
+  Collapse,
   Container,
   Divider,
   Grid,
+  LinearProgress,
   Stack,
   Typography,
 } from "@mui/material";
 
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import PsychologyRoundedIcon from "@mui/icons-material/PsychologyRounded";
 import SpeedRoundedIcon from "@mui/icons-material/SpeedRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
-import WorkRoundedIcon from "@mui/icons-material/WorkRounded";
-
-import { colors } from "../theme/theme.js";
+import LightbulbRoundedIcon from "@mui/icons-material/LightbulbRounded";
+import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 
 
 function getName(candidate) {
@@ -32,11 +32,9 @@ function getName(candidate) {
     candidate?.name ||
     candidate?.full_name ||
     candidate?.candidate ||
-    candidate?.personal_info?.name ||
     "Unknown Candidate"
   );
 }
-
 
 function toArray(value) {
   if (!value) return [];
@@ -44,403 +42,255 @@ function toArray(value) {
   return [value];
 }
 
+function textOf(item) {
+  if (typeof item === "string") return item;
+  return (
+    item?.description ||
+    item?.reason ||
+    item?.name ||
+    item?.text ||
+    JSON.stringify(item)
+  );
+}
 
-function Section({ icon, title, children, defaultOpen = true, badge }) {
+function Collapsible({ title, icon, children, defaultOpen = false }) {
   const [open, setOpen] = React.useState(defaultOpen);
 
   return (
     <Card
       elevation={0}
       sx={{
-        border: "1px solid #E1E6EB",
+        border: "1px solid #DDE4EA",
         borderRadius: 3,
         overflow: "hidden",
         background: "#FFFFFF",
-        height: "100%",
-        transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-        "&:hover": {
-          borderColor: "#CBD5DF",
-          boxShadow: "0 4px 18px rgba(31, 45, 61, 0.05)",
-        },
       }}
     >
       <Box
         component="button"
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         sx={{
           width: "100%",
           border: 0,
           cursor: "pointer",
-          textAlign: "left",
-          px: 3,
-          py: 2,
           display: "flex",
           alignItems: "center",
           gap: 1.2,
-          background: "#FAFBFC",
-          borderBottom: open ? "1px solid #EDF0F3" : "none",
-          color: "inherit",
+          px: 2.5,
+          py: 1.8,
+          background: "#FFFFFF",
+          textAlign: "left",
+          color: "#17212B",
+          "&:hover": { background: "#F8FAFC" },
         }}
       >
-        <Box
-          sx={{
-            width: 34,
-            height: 34,
-            borderRadius: 1.5,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "#EDF2F7",
-            color: "#607A96",
-            flexShrink: 0,
-          }}
-        >
-          {icon}
-        </Box>
-
-        <Typography
-          sx={{
-            flex: 1,
-            fontSize: 17,
-            fontWeight: 800,
-            color: "#26313C",
-          }}
-        >
+        {icon}
+        <Typography sx={{ flex: 1, fontSize: 16, fontWeight: 800 }}>
           {title}
         </Typography>
-
-        {badge && (
-          <Chip
-            size="small"
-            label={badge}
-            sx={{
-              height: 24,
-              fontSize: 11,
-              fontWeight: 700,
-              background: "#EEF3F7",
-              color: "#607080",
-            }}
-          />
-        )}
-
         <ExpandMoreRoundedIcon
           sx={{
-            color: "#82909D",
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
-            transition: "transform 0.2s ease",
+            color: "#647382",
+            transform: open ? "rotate(180deg)" : "none",
+            transition: "transform .2s",
           }}
         />
       </Box>
 
-      {open && <Box sx={{ p: 3 }}>{children}</Box>}
+      <Collapse in={open}>
+        <Box sx={{ px: 2.5, pb: 2.5 }}>
+          <Divider sx={{ mb: 2 }} />
+          {children}
+        </Box>
+      </Collapse>
     </Card>
   );
 }
 
+function Signal({ label, value, tone = "neutral" }) {
+  const styles = {
+    positive: { bg: "#EAF6F0", color: "#247354", dot: "#3E8F72" },
+    warning: { bg: "#FFF6E5", color: "#8A641E", dot: "#B58A3A" },
+    negative: { bg: "#FCEDEB", color: "#A54E4E", dot: "#B9685D" },
+    neutral: { bg: "#F0F4F7", color: "#506170", dot: "#71879A" },
+  };
 
-function ListSection({ items, emptyText, positive = false }) {
-  const values = toArray(items);
+  const s = styles[tone] || styles.neutral;
 
-  if (!values.length) {
+  return (
+    <Box
+      sx={{
+        px: 1.6,
+        py: 1.2,
+        borderRadius: 2,
+        background: s.bg,
+        minWidth: 145,
+      }}
+    >
+      <Typography sx={{ fontSize: 11, fontWeight: 800, color: s.color, textTransform: "uppercase", letterSpacing: ".06em" }}>
+        {label}
+      </Typography>
+      <Typography sx={{ mt: .35, fontSize: 15, fontWeight: 800, color: "#17212B" }}>
+        {value || "Not available"}
+      </Typography>
+    </Box>
+  );
+}
+
+function BulletGroup({ items, positive = false, limit = 3 }) {
+  const values = toArray(items).filter(Boolean);
+  const shown = values.slice(0, limit);
+
+  if (!shown.length) {
     return (
-      <Typography sx={{ color: "#8B96A1", fontSize: 15 }}>
-        {emptyText}
+      <Typography sx={{ color: "#687786", fontSize: 14 }}>
+        No specific points returned.
       </Typography>
     );
   }
 
   return (
-    <Stack spacing={1.2}>
-      {values.map((item, index) => {
-        const text =
-          typeof item === "string"
-            ? item
-            : item?.description ||
-              item?.reason ||
-              item?.name ||
-              JSON.stringify(item);
-
-        const [expanded, setExpanded] = React.useState(false);
-        const long = text.length > 180;
-
-        return (
-          <Box
-            key={index}
-            sx={{
-              display: "flex",
-              gap: 1,
-              alignItems: "flex-start",
-              p: 1.3,
-              borderRadius: 2,
-              background: "#F8FAFB",
-              border: "1px solid #E9EDF1",
-            }}
-          >
-            <Box
-              sx={{
-                mt: "7px",
-                width: 7,
-                height: 7,
-                borderRadius: "50%",
-                flexShrink: 0,
-                background: positive ? "#3E8F72" : "#C77B57",
-              }}
-            />
-
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography
-                sx={{
-                  fontSize: 15.5,
-                  lineHeight: 1.7,
-                  color: "#26313C",
-                  display: "-webkit-box",
-                  WebkitBoxOrient: "vertical",
-                  WebkitLineClamp: expanded || !long ? "unset" : 3,
-                  overflow: "hidden",
-                }}
-              >
-                {text}
-              </Typography>
-
-              {long && (
-                <Button
-                  size="small"
-                  onClick={() => setExpanded((value) => !value)}
-                  sx={{
-                    mt: 0.3,
-                    minWidth: 0,
-                    p: 0,
-                    textTransform: "none",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: "#55718F",
-                  }}
-                >
-                  {expanded ? "Show less" : "Read more"}
-                </Button>
-              )}
-            </Box>
-          </Box>
-        );
-      })}
+    <Stack spacing={1}>
+      {shown.map((item, index) => (
+        <Box
+          key={index}
+          sx={{
+            display: "flex",
+            gap: 1,
+            alignItems: "flex-start",
+            p: 1.2,
+            borderRadius: 2,
+            background: "#F7F9FB",
+          }}
+        >
+          {positive ? (
+            <CheckCircleRoundedIcon sx={{ mt: .15, fontSize: 18, color: "#3E8F72" }} />
+          ) : (
+            <WarningAmberRoundedIcon sx={{ mt: .15, fontSize: 18, color: "#B9685D" }} />
+          )}
+          <Typography sx={{ fontSize: 14, lineHeight: 1.55, color: "#263440" }}>
+            {textOf(item)}
+          </Typography>
+        </Box>
+      ))}
+      {values.length > limit && (
+        <Typography sx={{ fontSize: 12, color: "#71808D", fontWeight: 700 }}>
+          +{values.length - limit} more — see detailed analysis below
+        </Typography>
+      )}
     </Stack>
   );
 }
 
+function ScoreRing({ score }) {
+  const safe = Math.max(0, Math.min(100, Number(score) || 0));
+  const tone = safe >= 80 ? "#3E8F72" : safe >= 60 ? "#B58A3A" : "#B9685D";
 
-function MetricCard({ icon, label, value, accent = "#55718F" }) {
   return (
-    <Card
-      elevation={0}
+    <Box
       sx={{
-        p: 2.2,
-        borderRadius: 2.5,
-        border: "1px solid #E1E6EB",
-        background: "#FFFFFF",
-        height: "100%",
+        width: 150,
+        height: 150,
+        borderRadius: "50%",
+        background: `conic-gradient(${tone} ${safe}%, #E8EDF1 0)`,
+        display: "grid",
+        placeItems: "center",
+        flexShrink: 0,
       }}
     >
       <Box
         sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          color: accent,
-          mb: 1,
+          width: 116,
+          height: 116,
+          borderRadius: "50%",
+          background: "#FFFFFF",
+          display: "grid",
+          placeItems: "center",
+          textAlign: "center",
         }}
       >
-        {icon}
-        <Typography
-          sx={{
-            fontSize: 10,
-            fontWeight: 800,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            color: "#87929D",
-          }}
-        >
-          {label}
-        </Typography>
-      </Box>
-
-      <Typography
-        sx={{
-          fontSize: 25,
-          fontWeight: 850,
-          color: "#18212B",
-        }}
-      >
-        {value}
-      </Typography>
-    </Card>
-  );
-}
-
-
-function ScoreMeter({ score }) {
-  const safeScore = Math.max(0, Math.min(100, Number(score) || 0));
-
-  const label =
-    safeScore >= 80
-      ? "Strong fit"
-      : safeScore >= 60
-      ? "Good fit"
-      : safeScore >= 40
-      ? "Partial fit"
-      : "Low fit";
-
-  return (
-    <Box
-      sx={{
-        p: 2.5,
-        borderRadius: 3,
-        border: "1px solid #E1E6EB",
-        background: "#FFFFFF",
-        height: "100%",
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", mb: 1.5 }}>
         <Box>
-          <Typography sx={{ fontSize: 11, fontWeight: 800, color: "#8995A1", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-            Overall role fit
+          <Typography sx={{ fontSize: 34, lineHeight: 1, fontWeight: 900, color: "#17212B" }}>
+            {safe.toFixed(0)}
           </Typography>
-          <Typography sx={{ mt: 0.3, fontSize: 34, fontWeight: 900, color: "#18212B", lineHeight: 1 }}>
-            {safeScore.toFixed(1)}
-            <Typography component="span" sx={{ fontSize: 14, color: "#8A95A1", fontWeight: 700 }}>
-              {" "} / 100
-            </Typography>
+          <Typography sx={{ mt: .5, fontSize: 11, fontWeight: 800, color: "#73818E", textTransform: "uppercase" }}>
+            fit score
           </Typography>
         </Box>
-
-        <Chip
-          label={label}
-          size="small"
-          sx={{
-            fontWeight: 800,
-            background: safeScore >= 80 ? "#E8F4EF" : safeScore >= 60 ? "#F7F0DF" : "#F8ECEA",
-            color: safeScore >= 80 ? "#2E8066" : safeScore >= 60 ? "#8C6826" : "#A54E4E",
-          }}
-        />
       </Box>
-
-      <Box sx={{ height: 10, borderRadius: 99, background: "#E9EEF2", overflow: "hidden" }}>
-        <Box
-          sx={{
-            width: `${safeScore}%`,
-            height: "100%",
-            borderRadius: 99,
-            background: safeScore >= 80 ? "#3E8F72" : safeScore >= 60 ? "#B58A3A" : "#B9685D",
-            transition: "width 0.6s ease",
-          }}
-        />
-      </Box>
-
-      <Typography sx={{ mt: 1.2, fontSize: 14, color: "#5E6B77" }}>
-        This is the contextual AI assessment of the candidate against this job description.
-      </Typography>
     </Box>
   );
 }
 
+function FactorBars({ factors }) {
+  const entries = Object.entries(factors || {}).filter(([, value]) => value);
+  const visible = entries.slice(0, 6);
 
-function QuickNav({ onJump }) {
-  const items = [
-    ["summary", "Summary"],
-    ["evidence", "Evidence"],
-    ["factors", "Factor analysis"],
-  ];
+  if (!visible.length) {
+    return (
+      <Typography sx={{ color: "#687786", fontSize: 14 }}>
+        Detailed factor analysis was not returned by the evaluator.
+      </Typography>
+    );
+  }
 
   return (
-    <Box
-      sx={{
-        mb: 2.5,
-        p: 1,
-        borderRadius: 2.5,
-        border: "1px solid #E1E6EB",
-        background: "#FFFFFF",
-        display: "flex",
-        gap: 0.5,
-        flexWrap: "wrap",
-      }}
-    >
-      {items.map(([id, label]) => (
-        <Button
-          key={id}
-          size="small"
-          onClick={() => onJump(id)}
-          sx={{
-            px: 1.6,
-            py: 0.8,
-            borderRadius: 1.7,
-            textTransform: "none",
-            fontWeight: 750,
-            color: "#657482",
-            "&:hover": { background: "#F1F4F7", color: "#26313C" },
-          }}
-        >
-          {label}
-        </Button>
+    <Stack spacing={1.8}>
+      {visible.map(([key, value]) => (
+        <Box key={key}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, mb: .7 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 800, color: "#273540", textTransform: "capitalize" }}>
+              {key.replaceAll("_", " ")}
+            </Typography>
+            <Typography sx={{ fontSize: 12, color: "#657482" }}>
+              evaluated
+            </Typography>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={100}
+            sx={{
+              height: 6,
+              borderRadius: 10,
+              background: "#E8EDF1",
+              "& .MuiLinearProgress-bar": {
+                borderRadius: 10,
+                background: "#7890A5",
+              },
+            }}
+          />
+          <Typography sx={{ mt: .7, fontSize: 13, lineHeight: 1.55, color: "#596875" }}>
+            {String(value)}
+          </Typography>
+        </Box>
       ))}
-    </Box>
+    </Stack>
   );
 }
-
 
 function CandidateDetails() {
   const navigate = useNavigate();
   const location = useLocation();
+  const candidate = location.state;
 
-  const candidateState = location.state;
-
-  if (!candidateState) {
+  if (!candidate) {
     return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          background: "#F6F8FA",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          p: 3,
-        }}
-      >
-        <Card
-          elevation={0}
-          sx={{
-            maxWidth: 520,
-            width: "100%",
-            p: 5,
-            textAlign: "center",
-            borderRadius: 3,
-            border: "1px solid #E0E5EA",
-          }}
-        >
-          <PersonRoundedIcon
-            sx={{ fontSize: 55, color: "#9AA7B4", mb: 1 }}
-          />
-
-          <Typography sx={{ fontSize: 22, fontWeight: 800 }}>
+      <Box sx={{ minHeight: "100vh", background: "#F6F8FA", display: "grid", placeItems: "center", p: 3 }}>
+        <Card elevation={0} sx={{ p: 5, maxWidth: 500, textAlign: "center", border: "1px solid #DDE4EA", borderRadius: 3 }}>
+          <PsychologyRoundedIcon sx={{ fontSize: 52, color: "#7890A5" }} />
+          <Typography sx={{ mt: 1, fontSize: 22, fontWeight: 850, color: "#17212B" }}>
             No Evaluation Selected
           </Typography>
-
-          <Typography sx={{ mt: 1, color: "#7B8793", fontSize: 14 }}>
-            Return to the search results and select a candidate evaluation.
+          <Typography sx={{ mt: 1, color: "#62717F" }}>
+            Select a candidate from the search results to view the AI assessment.
           </Typography>
-
           <Button
-            variant="contained"
             startIcon={<ArrowBackRoundedIcon />}
             onClick={() => navigate("/results")}
-            sx={{
-              mt: 3,
-              textTransform: "none",
-              fontWeight: 700,
-              borderRadius: 2,
-              backgroundColor: colors.brass,
-              "&:hover": { backgroundColor: colors.brassDark },
-            }}
+            variant="contained"
+            sx={{ mt: 3, textTransform: "none", fontWeight: 800 }}
           >
             Back to Results
           </Button>
@@ -449,16 +299,21 @@ function CandidateDetails() {
     );
   }
 
-  // Search results contain AI evaluation fields at the top level and
-  // the parsed resume under `resume`.
-  // Keep the evaluation payload separate from the resume/profile payload.
-  // This page is intentionally an evaluation-only view.
-  const candidate = candidateState;
-
   const name = getName(candidate);
-
   const score = Number(candidate.overall_score ?? 0);
   const semanticScore = Number(candidate.semantic_score ?? 0);
+  const recommendation = candidate.recommendation || "Under Review";
+  const confidence = candidate.confidence || "N/A";
+
+  const contextualTime =
+    candidate._contextual_total_time ??
+    candidate.contextual_total_time ??
+    null;
+
+  const geminiTime =
+    candidate._contextual_time ??
+    candidate.contextual_evaluation_time ??
+    null;
 
   const factorAnalysis =
     candidate.factor_analysis &&
@@ -466,405 +321,252 @@ function CandidateDetails() {
       ? candidate.factor_analysis
       : {};
 
-  const evaluationTime =
-    candidate._contextual_time ??
-    candidate.contextual_evaluation_time ??
-    "N/A";
+  const strengths = toArray(candidate.strengths);
+  const gaps = toArray(candidate.gaps);
 
-  const contextualTotalTime =
-    candidate._contextual_total_time ??
-    candidate.contextual_total_time ??
-    "N/A";
-
-  const recommendation = candidate.recommendation || "Under Review";
-  const recommendationColor =
+  const recommendationTone =
     recommendation === "Highly Recommended"
-      ? "#2E8066"
+      ? "positive"
       : recommendation === "Recommended"
-      ? "#9A6A21"
-      : recommendation === "Consider"
-      ? "#A66A00"
-      : "#A54E4E";
+      ? "warning"
+      : "negative";
+
+  const recommendationBg =
+    recommendationTone === "positive" ? "#EAF6F0" :
+    recommendationTone === "warning" ? "#FFF6E5" : "#FCEDEB";
+
+  const recommendationColor =
+    recommendationTone === "positive" ? "#247354" :
+    recommendationTone === "warning" ? "#8A641E" : "#A54E4E";
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        background: "#F6F8FA",
-        py: { xs: 2, md: 4 },
-      }}
-    >
-      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 4 } }}>
+    <Box sx={{ minHeight: "100vh", background: "#F5F7F9", py: { xs: 2, md: 4 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, md: 3 } }}>
         <Button
           startIcon={<ArrowBackRoundedIcon />}
           onClick={() => navigate("/results")}
-          sx={{
-            mb: 2,
-            textTransform: "none",
-            fontWeight: 700,
-            color: "#63717E",
-            "&:hover": {
-              background: "transparent",
-              color: "#26313C",
-            },
-          }}
+          sx={{ mb: 2, color: "#566675", fontWeight: 800, textTransform: "none" }}
         >
           Back to Search Results
         </Button>
 
-        {/* Candidate identity + evaluation status */}
+        {/* The recruiter should understand this screen in a few seconds. */}
         <Card
           elevation={0}
           sx={{
+            border: "1px solid #DCE3E9",
             borderRadius: 3,
-            border: "1px solid #DEE4EA",
-            background: "#FFFFFF",
             overflow: "hidden",
-            mb: 2.5,
+            mb: 2,
+            background: "#FFFFFF",
           }}
         >
-          <Box sx={{ height: 6, background: colors.brass }} />
-
-          <Box sx={{ p: { xs: 3, md: 4 } }}>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "column", md: "row" },
-                alignItems: { xs: "flex-start", md: "center" },
-                gap: 2.5,
-              }}
-            >
-              <Box
-                sx={{
-                  width: 88,
-                  height: 88,
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg, #E7EEF6, #D5E1EE)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#55718F",
-                  flexShrink: 0,
-                }}
-              >
-                <PersonRoundedIcon sx={{ fontSize: 42 }} />
-              </Box>
-
-              <Box sx={{ flex: 1 }}>
-                <Typography
-                  sx={{
-                    fontSize: { xs: 27, md: 34 },
-                    fontWeight: 850,
-                    color: "#18212B",
-                    letterSpacing: "-0.025em",
-                  }}
-                >
+          <Box sx={{ height: 5, background: "#55718F" }} />
+          <Box sx={{ p: { xs: 2.5, md: 3.5 } }}>
+            <Grid container spacing={3} alignItems="center">
+              <Grid item xs={12} md={7}>
+                <Typography sx={{ fontSize: 12, fontWeight: 900, color: "#71808D", textTransform: "uppercase", letterSpacing: ".1em" }}>
+                  AI Candidate Assessment
+                </Typography>
+                <Typography sx={{ mt: .7, fontSize: { xs: 27, md: 35 }, fontWeight: 900, color: "#17212B", letterSpacing: "-.03em" }}>
                   {name}
                 </Typography>
+                <Typography sx={{ mt: .8, fontSize: 15, color: "#5E6D7A" }}>
+                  AI evaluation against the uploaded job description
+                </Typography>
+              </Grid>
 
-                <Typography
+              <Grid item xs={12} md={5}>
+                <Box
                   sx={{
-                    mt: 1.5,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: "#8A95A1",
+                    p: 1.5,
+                    borderRadius: 2.5,
+                    background: recommendationBg,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 2,
                   }}
                 >
-                  AI Candidate Evaluation
-                </Typography>
-              </Box>
-
-              <Box sx={{ textAlign: { xs: "left", md: "right" } }}>
-                <Typography
-                  sx={{
-                    fontSize: 11,
-                    fontWeight: 800,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: "#8995A1",
-                  }}
-                >
-                  Evaluation Status
-                </Typography>
-
-                <Chip
-                  icon={<CheckCircleRoundedIcon />}
-                  label={
-                    candidate.evaluation_status === "completed"
-                      ? "Completed"
-                      : candidate.evaluation_status || "Available"
-                  }
-                  sx={{
-                    mt: 0.8,
-                    fontWeight: 800,
-                    color: "#2E8066",
-                    background: "#E8F4EF",
-                  }}
-                />
-              </Box>
-            </Box>
+                  <Box>
+                    <Typography sx={{ fontSize: 11, fontWeight: 900, color: recommendationColor, textTransform: "uppercase", letterSpacing: ".08em" }}>
+                      AI recommendation
+                    </Typography>
+                    <Typography sx={{ mt: .4, fontSize: 21, fontWeight: 900, color: "#17212B" }}>
+                      {recommendation}
+                    </Typography>
+                  </Box>
+                  <CheckCircleRoundedIcon sx={{ fontSize: 34, color: recommendationColor }} />
+                </Box>
+              </Grid>
+            </Grid>
           </Box>
         </Card>
 
-        <QuickNav
-          onJump={(id) => {
-            document.getElementById(id)?.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }}
-        />
-
-        {/* Main AI evaluation metrics */}
-        <Grid container spacing={2} sx={{ mb: 2.5 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <MetricCard
-              icon={<TrendingUpRoundedIcon />}
-              label="Overall Fit"
-              value={`${score.toFixed(1)} / 100`}
-              accent="#55718F"
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <MetricCard
-              icon={<PsychologyRoundedIcon />}
-              label="Recommendation"
-              value={recommendation}
-              accent={recommendationColor}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <MetricCard
-              icon={<CheckCircleRoundedIcon />}
-              label="Confidence"
-              value={candidate.confidence || "N/A"}
-              accent="#55718F"
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <MetricCard
-              icon={<SpeedRoundedIcon />}
-              label="Semantic Similarity"
-              value={`${semanticScore.toFixed(2)}%`}
-              accent="#55718F"
-            />
-          </Grid>
-        </Grid>
-
-        {/* Evaluation timing */}
-        <Card
-          elevation={0}
-          sx={{
-            mb: 2.5,
-            p: 2.2,
-            borderRadius: 2.5,
-            border: "1px solid #E1E6EB",
-            background: "#FFFFFF",
-          }}
-        >
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={3}
-            divider={<Divider orientation="vertical" flexItem />}
-          >
-            <Box>
-              <Typography sx={{ fontSize: 11, fontWeight: 800, color: "#8A95A1", textTransform: "uppercase" }}>
-                Gemini Response
-              </Typography>
-              <Typography sx={{ mt: 0.4, fontSize: 18, fontWeight: 800, color: "#26313C" }}>
-                {typeof evaluationTime === "number" ? `${evaluationTime.toFixed(2)} sec` : evaluationTime}
-              </Typography>
-            </Box>
-
-            <Box>
-              <Typography sx={{ fontSize: 10, fontWeight: 800, color: "#8A95A1", textTransform: "uppercase" }}>
-                Total Contextual Evaluation
-              </Typography>
-              <Typography sx={{ mt: 0.4, fontSize: 18, fontWeight: 800, color: "#26313C" }}>
-                {typeof contextualTotalTime === "number" ? `${contextualTotalTime.toFixed(2)} sec` : contextualTotalTime}
-              </Typography>
-            </Box>
-          </Stack>
-        </Card>
-
-        <Box id="summary" sx={{ scrollMarginTop: 20, mb: 2.5 }}>
-          <Grid container spacing={2.5}>
-            <Grid item xs={12} md={5}>
-              <ScoreMeter score={score} />
-            </Grid>
-
-            <Grid item xs={12} md={7}>
-              <Section
-                icon={<PsychologyRoundedIcon fontSize="small" />}
-                title="What this means"
-                defaultOpen
-              >
-                <Typography sx={{ fontSize: 14, lineHeight: 1.8, color: "#52606D" }}>
-                  {candidate.reason || "No detailed evaluation reason was returned."}
-                </Typography>
-              </Section>
-            </Grid>
-          </Grid>
-        </Box>
-
-        {/* Role fit + reason */}
-        <Box id="evidence" sx={{ scrollMarginTop: 20 }}>
-        <Grid container spacing={2.5} sx={{ mb: 2.5 }}>
+        {/* First screen: score + the handful of signals a recruiter needs. */}
+        <Grid container spacing={2} sx={{ mb: 2 }}>
           <Grid item xs={12} md={5}>
-            <Section
-              icon={<WorkRoundedIcon fontSize="small" />}
-              title="Role Fit"
+            <Card
+              elevation={0}
+              sx={{
+                height: "100%",
+                border: "1px solid #DCE3E9",
+                borderRadius: 3,
+                p: { xs: 2.5, md: 3 },
+                background: "#FFFFFF",
+              }}
             >
-              <Typography
-                sx={{
-                  fontSize: 16,
-                  lineHeight: 1.8,
-                  color: "#26313C",
-                }}
-              >
-                {candidate.role_fit || "No role-fit explanation available."}
+              <Typography sx={{ fontSize: 12, fontWeight: 900, color: "#71808D", textTransform: "uppercase", letterSpacing: ".08em" }}>
+                At a glance
               </Typography>
-            </Section>
+
+              <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 2.5 }}>
+                <ScoreRing score={score} />
+                <Box>
+                  <Typography sx={{ fontSize: 16, fontWeight: 850, color: "#17212B" }}>
+                    Overall role fit
+                  </Typography>
+                  <Typography sx={{ mt: .6, fontSize: 14, lineHeight: 1.6, color: "#5B6A77" }}>
+                    {score >= 80
+                      ? "The evaluation found strong alignment with the role."
+                      : score >= 60
+                      ? "The evaluation found meaningful alignment with some areas to review."
+                      : "The evaluation found several areas that need closer review."}
+                  </Typography>
+                </Box>
+              </Box>
+            </Card>
           </Grid>
 
           <Grid item xs={12} md={7}>
-            <Section
-              icon={<PsychologyRoundedIcon fontSize="small" />}
-              title="AI Evaluation Reason"
+            <Card
+              elevation={0}
+              sx={{
+                height: "100%",
+                border: "1px solid #DCE3E9",
+                borderRadius: 3,
+                p: { xs: 2.5, md: 3 },
+                background: "#FFFFFF",
+              }}
             >
-              <Typography
-                sx={{
-                  fontSize: 14,
-                  lineHeight: 1.8,
-                  color: "#52606D",
-                }}
-              >
-                {candidate.reason || "No detailed reason was returned."}
+              <Typography sx={{ fontSize: 12, fontWeight: 900, color: "#71808D", textTransform: "uppercase", letterSpacing: ".08em" }}>
+                Key signals
               </Typography>
-            </Section>
-          </Grid>
-        </Grid>
-        </Box>
 
-        {/* Strengths / gaps / compensation / critical */}
-        <Grid container spacing={2.5} sx={{ mb: 2.5 }}>
-          <Grid item xs={12} md={6}>
-            <Section
-              icon={<CheckCircleRoundedIcon fontSize="small" />}
-              title="Strengths"
-            >
-              <ListSection
-                items={candidate.strengths}
-                emptyText="No strengths returned."
-                positive
-              />
-            </Section>
-          </Grid>
+              <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1} sx={{ mt: 2 }}>
+                <Signal label="Confidence" value={confidence} tone="neutral" />
+                <Signal label="Semantic match" value={`${semanticScore.toFixed(1)}%`} tone={semanticScore >= 60 ? "positive" : "warning"} />
+                <Signal label="Strengths" value={`${strengths.length} identified`} tone="positive" />
+                <Signal label="Gaps" value={`${gaps.length} identified`} tone={gaps.length > 0 ? "warning" : "positive"} />
+              </Stack>
 
-          <Grid item xs={12} md={6}>
-            <Section
-              icon={<WarningAmberRoundedIcon fontSize="small" />}
-              title="Gaps"
-            >
-              <ListSection
-                items={candidate.gaps}
-                emptyText="No gaps returned."
-              />
-            </Section>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Section
-              icon={<TrendingUpRoundedIcon fontSize="small" />}
-              title="Compensating Factors"
-            >
-              <ListSection
-                items={candidate.compensating_factors}
-                emptyText="No compensating factors returned."
-                positive
-              />
-            </Section>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Section
-              icon={<WarningAmberRoundedIcon fontSize="small" />}
-              title="Critical Requirements Missing"
-            >
-              <ListSection
-                items={candidate.critical_requirements_missing}
-                emptyText="No critical requirements identified."
-              />
-            </Section>
+              {(contextualTime || geminiTime) && (
+                <Typography sx={{ mt: 2, fontSize: 12, color: "#71808D" }}>
+                  Evaluation completed in{" "}
+                  <strong>{contextualTime ? `${Number(contextualTime).toFixed(2)} sec` : "—"}</strong>
+                  {geminiTime ? ` • Gemini response ${Number(geminiTime).toFixed(2)} sec` : ""}
+                </Typography>
+              )}
+            </Card>
           </Grid>
         </Grid>
 
-        {/* Factor analysis */}
-        <Box id="factors" sx={{ mb: 2.5, scrollMarginTop: 20 }}>
-          <Section
-            icon={<PsychologyRoundedIcon fontSize="small" />}
-            title="Contextual Factor Analysis"
-            defaultOpen
+        {/* Don't make the recruiter read the AI explanation immediately. */}
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Grid item xs={12} md={6}>
+            <Card elevation={0} sx={{ height: "100%", p: 2.5, border: "1px solid #DCE3E9", borderRadius: 3, background: "#FFFFFF" }}>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1.5 }}>
+                <LightbulbRoundedIcon sx={{ color: "#B58A3A" }} />
+                <Typography sx={{ fontSize: 16, fontWeight: 850, color: "#17212B" }}>
+                  Why this candidate stands out
+                </Typography>
+              </Box>
+              <BulletGroup items={candidate.strengths} positive limit={3} />
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Card elevation={0} sx={{ height: "100%", p: 2.5, border: "1px solid #DCE3E9", borderRadius: 3, background: "#FFFFFF" }}>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1.5 }}>
+                <WarningAmberRoundedIcon sx={{ color: "#B9685D" }} />
+                <Typography sx={{ fontSize: 16, fontWeight: 850, color: "#17212B" }}>
+                  What needs attention
+                </Typography>
+              </Box>
+              <BulletGroup items={candidate.gaps} limit={3} />
+            </Card>
+          </Grid>
+        </Grid>
+
+        <Stack spacing={2}>
+          <Collapsible
+            title="Why did the AI reach this result?"
+            icon={<PsychologyRoundedIcon sx={{ color: "#55718F" }} />}
+            defaultOpen={false}
+          >
+            <Typography sx={{ fontSize: 15, lineHeight: 1.75, color: "#263440" }}>
+              {candidate.reason || "No detailed reasoning was returned."}
+            </Typography>
+          </Collapsible>
+
+          <Collapsible
+            title="Role fit explanation"
+            icon={<TrendingUpRoundedIcon sx={{ color: "#55718F" }} />}
+          >
+            <Typography sx={{ fontSize: 15, lineHeight: 1.75, color: "#263440" }}>
+              {candidate.role_fit || "No role-fit explanation was returned."}
+            </Typography>
+          </Collapsible>
+
+          <Collapsible
+            title="Detailed strengths, gaps & requirements"
+            icon={<BoltRoundedIcon sx={{ color: "#55718F" }} />}
           >
             <Grid container spacing={2}>
-              {[
-                ["Skills", "skills"],
-                ["Experience", "experience"],
-                ["Projects", "projects"],
-                ["Education", "education"],
-                ["Certifications", "certifications"],
-                ["Achievements", "achievements"],
-                ["Internships", "internships"],
-                ["Domain Relevance", "domain_relevance"],
-              ].map(([label, key]) => (
-                <Grid item xs={12} md={6} key={key}>
-                  <Box
-                    sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      background: "#F7F9FB",
-                      border: "1px solid #E7EBEF",
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontSize: 11,
-                        fontWeight: 800,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                        color: "#7C8995",
-                        mb: 0.7,
-                      }}
-                    >
-                      {label}
-                    </Typography>
+              <Grid item xs={12} md={6}>
+                <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 900, color: "#247354" }}>
+                  Strengths
+                </Typography>
+                <BulletGroup items={candidate.strengths} positive limit={20} />
+              </Grid>
 
-                    <Typography
-                      sx={{
-                        fontSize: 15,
-                        lineHeight: 1.75,
-                        color: "#26313C",
-                      }}
-                    >
-                      {factorAnalysis[key] ||
-                        "No sufficient evaluation available."}
-                    </Typography>
-                  </Box>
-                </Grid>
-              ))}
+              <Grid item xs={12} md={6}>
+                <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 900, color: "#A54E4E" }}>
+                  Gaps
+                </Typography>
+                <BulletGroup items={candidate.gaps} limit={20} />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <Typography sx={{ mt: 2, mb: 1, fontSize: 14, fontWeight: 900, color: "#566675" }}>
+                  Compensating factors
+                </Typography>
+                <BulletGroup items={candidate.compensating_factors} positive limit={20} />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <Typography sx={{ mt: 2, mb: 1, fontSize: 14, fontWeight: 900, color: "#A54E4E" }}>
+                  Critical requirements missing
+                </Typography>
+                <BulletGroup items={candidate.critical_requirements_missing} limit={20} />
+              </Grid>
             </Grid>
-          </Section>
-        </Box>
+          </Collapsible>
 
+          <Collapsible
+            title="How the AI evaluated the candidate"
+            icon={<SpeedRoundedIcon sx={{ color: "#55718F" }} />}
+          >
+            <FactorBars factors={factorAnalysis} />
+          </Collapsible>
+        </Stack>
+
+        <Typography sx={{ mt: 3, mb: 1, textAlign: "center", fontSize: 12, color: "#81909D" }}>
+          AI assessment is a decision-support signal. Review the underlying candidate information before taking action.
+        </Typography>
       </Container>
     </Box>
   );
 }
-
 
 export default CandidateDetails;
