@@ -365,9 +365,7 @@ function CandidateDetails() {
                   flexShrink: 0,
                 }}
               >
-                <Typography sx={{ fontSize: 25, fontWeight: 850 }}>
-                  {initials}
-                </Typography>
+                <PersonRoundedIcon sx={{ fontSize: 42 }} />
               </Box>
 
               <Box sx={{ flex: 1 }}>
@@ -380,17 +378,6 @@ function CandidateDetails() {
                   }}
                 >
                   {name}
-                </Typography>
-
-                <Typography
-                  sx={{
-                    mt: 0.5,
-                    fontSize: 16,
-                    color: "#687684",
-                    fontWeight: 600,
-                  }}
-                >
-                  {role}
                 </Typography>
 
                 <Typography
