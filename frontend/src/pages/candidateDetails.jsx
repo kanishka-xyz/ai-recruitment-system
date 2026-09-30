@@ -498,32 +498,58 @@ function CandidateDetails() {
           </Grid>
         </Grid>
 
-        {/* Don't make the recruiter read the AI explanation immediately. */}
-        <Grid container spacing={2} alignItems="stretch" sx={{ mb: 2 }}>
-          <Grid item xs={12} md={6} sx={{ display: "flex" }}>
-            <Card elevation={0} sx={{ height: "100%", p: 2.5, border: "1px solid #DCE3E9", borderRadius: 3, background: "#FFFFFF" }}>
-              <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1.5 }}>
-                <LightbulbRoundedIcon sx={{ color: "#B58A3A" }} />
-                <Typography sx={{ fontSize: 16, fontWeight: 850, color: "#17212B" }}>
-                  Why this candidate stands out
-                </Typography>
-              </Box>
-              <BulletGroup items={candidate.strengths} positive limit={3} />
-            </Card>
-          </Grid>
+        {/* Recruiter summary: two equal, aligned decision cards. */}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1fr) minmax(0, 1fr)" },
+            gap: 2,
+            mb: 2,
+            alignItems: "stretch",
+          }}
+        >
+          <Card
+            elevation={0}
+            sx={{
+              minWidth: 0,
+              minHeight: 230,
+              p: 2.5,
+              border: "1px solid #D3DCE4",
+              borderRadius: 2.5,
+              background: "#FFFFFF",
+              boxSizing: "border-box",
+            }}
+          >
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1.5 }}>
+              <LightbulbRoundedIcon sx={{ color: "#B58A3A" }} />
+              <Typography sx={{ fontSize: 17, fontWeight: 900, color: "#17212B" }}>
+                Why this candidate stands out
+              </Typography>
+            </Box>
+            <BulletGroup items={candidate.strengths} positive limit={3} />
+          </Card>
 
-          <Grid item xs={12} md={6} sx={{ display: "flex" }}>
-            <Card elevation={0} sx={{ height: "100%", p: 2.5, border: "1px solid #DCE3E9", borderRadius: 3, background: "#FFFFFF" }}>
-              <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1.5 }}>
-                <WarningAmberRoundedIcon sx={{ color: "#B9685D" }} />
-                <Typography sx={{ fontSize: 16, fontWeight: 850, color: "#17212B" }}>
-                  What needs attention
-                </Typography>
-              </Box>
-              <BulletGroup items={candidate.gaps} limit={3} />
-            </Card>
-          </Grid>
-        </Grid>
+          <Card
+            elevation={0}
+            sx={{
+              minWidth: 0,
+              minHeight: 230,
+              p: 2.5,
+              border: "1px solid #D3DCE4",
+              borderRadius: 2.5,
+              background: "#FFFFFF",
+              boxSizing: "border-box",
+            }}
+          >
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1.5 }}>
+              <WarningAmberRoundedIcon sx={{ color: "#B9685D" }} />
+              <Typography sx={{ fontSize: 17, fontWeight: 900, color: "#17212B" }}>
+                What needs attention
+              </Typography>
+            </Box>
+            <BulletGroup items={candidate.gaps} limit={3} />
+          </Card>
+        </Box>
 
         <Stack spacing={2}>
           <Collapsible
@@ -549,13 +575,46 @@ function CandidateDetails() {
             title="Detailed strengths, gaps & requirements"
             icon={<BoltRoundedIcon sx={{ color: "#55718F" }} />}
           >
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1fr) minmax(0, 1fr)" },
+                columnGap: 3,
+                rowGap: 3,
+              }}
+            >
+              <Box sx={{ minWidth: 0 }}>
                 <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 900, color: "#247354" }}>
                   Strengths
                 </Typography>
                 <BulletGroup items={candidate.strengths} positive limit={20} />
-              </Grid>
+              </Box>
+
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 900, color: "#A54E4E" }}>
+                  Gaps
+                </Typography>
+                <BulletGroup items={candidate.gaps} limit={20} />
+              </Box>
+
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 900, color: "#566675" }}>
+                  Compensating factors
+                </Typography>
+                <Box sx={{ mt: 1 }}>
+                  <BulletGroup items={candidate.compensating_factors} positive limit={20} />
+                </Box>
+              </Box>
+
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 900, color: "#A54E4E" }}>
+                  Critical requirements missing
+                </Typography>
+                <Box sx={{ mt: 1 }}>
+                  <BulletGroup items={candidate.critical_requirements_missing} limit={20} />
+                </Box>
+              </Box>
+            </Box>
 
               <Grid item xs={12} md={6}>
                 <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 900, color: "#A54E4E" }}>
