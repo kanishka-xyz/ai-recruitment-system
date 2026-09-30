@@ -39,6 +39,7 @@ function getName(candidate) {
     candidate?.name ||
     candidate?.full_name ||
     candidate?.candidate ||
+    candidate?.personal_info?.name ||
     "Unknown Candidate"
   );
 }
@@ -58,6 +59,7 @@ function getExperience(candidate) {
   return (
     candidate?.total_experience_years ??
     candidate?.experience_years ??
+    candidate?.total_experience ??
     candidate?.experience ??
     0
   );
@@ -472,7 +474,19 @@ function CandidateDetails() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const candidate = location.state;
+  const candidateState = location.state;
+
+  // Search results store the parsed resume inside `candidate.resume`,
+  // while the outer object contains the AI evaluation metadata.
+  // Merge both so the details page displays the real candidate profile.
+  const candidate =
+    candidateState?.resume &&
+    typeof candidateState.resume === "object"
+      ? {
+          ...candidateState.resume,
+          ...candidateState,
+        }
+      : candidateState;
 
   console.log(
     "Candidate profile received:",
