@@ -32,6 +32,9 @@ function getName(candidate) {
     candidate?.name ||
     candidate?.full_name ||
     candidate?.candidate ||
+    candidate?.resume?.candidate_name ||
+    candidate?.resume?.name ||
+    candidate?.resume?.full_name ||
     "Unknown Candidate"
   );
 }
@@ -127,8 +130,10 @@ function Signal({ label, value, tone = "neutral" }) {
         py: 1.2,
         borderRadius: 2,
         background: s.bg,
-        flex: "1 1 180px",
+        width: "100%",
         minWidth: 0,
+        height: "100%",
+        boxSizing: "border-box",
         border: "1px solid rgba(39,52,64,.08)",
       }}
     >
@@ -344,7 +349,7 @@ function CandidateDetails() {
 
   return (
     <Box sx={{ minHeight: "100vh", background: "#F3F6F8", py: { xs: 2, md: 4 } }}>
-      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 3 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, md: 3 } }}>
         <Button
           startIcon={<ArrowBackRoundedIcon />}
           onClick={() => navigate("/results")}
@@ -366,7 +371,7 @@ function CandidateDetails() {
         >
           <Box sx={{ height: 5, background: "#55718F" }} />
           <Box sx={{ p: { xs: 2.5, md: 3 } }}>
-            <Grid container spacing={3} alignItems="center">
+            <Grid container spacing={3} alignItems="stretch">
               <Grid item xs={12} md={7}>
                 <Typography sx={{ fontSize: 12, fontWeight: 900, color: "#71808D", textTransform: "uppercase", letterSpacing: ".1em" }}>
                   AI Candidate Assessment
@@ -379,16 +384,19 @@ function CandidateDetails() {
                 </Typography>
               </Grid>
 
-              <Grid item xs={12} md={5}>
+              <Grid item xs={12} md={5} sx={{ display: "flex" }}>
                 <Box
                   sx={{
-                    p: 1.5,
+                    p: 2.2,
                     borderRadius: 2.5,
                     background: recommendationBg,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: 2,
+                    width: "100%",
+                    minHeight: 108,
+                    boxSizing: "border-box",
                   }}
                 >
                   <Box>
@@ -407,8 +415,8 @@ function CandidateDetails() {
         </Card>
 
         {/* First screen: score + the handful of signals a recruiter needs. */}
-        <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid item xs={12} md={5}>
+        <Grid container spacing={2} alignItems="stretch" sx={{ mb: 2 }}>
+          <Grid item xs={12} md={5} sx={{ display: "flex" }}>
             <Card
               elevation={0}
               sx={{
@@ -441,7 +449,7 @@ function CandidateDetails() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={7}>
+          <Grid item xs={12} md={7} sx={{ display: "flex" }}>
             <Card
               elevation={0}
               sx={{
@@ -491,8 +499,8 @@ function CandidateDetails() {
         </Grid>
 
         {/* Don't make the recruiter read the AI explanation immediately. */}
-        <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid item xs={12} md={6}>
+        <Grid container spacing={2} alignItems="stretch" sx={{ mb: 2 }}>
+          <Grid item xs={12} md={6} sx={{ display: "flex" }}>
             <Card elevation={0} sx={{ height: "100%", p: 2.5, border: "1px solid #DCE3E9", borderRadius: 3, background: "#FFFFFF" }}>
               <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1.5 }}>
                 <LightbulbRoundedIcon sx={{ color: "#B58A3A" }} />
@@ -504,7 +512,7 @@ function CandidateDetails() {
             </Card>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={{ display: "flex" }}>
             <Card elevation={0} sx={{ height: "100%", p: 2.5, border: "1px solid #DCE3E9", borderRadius: 3, background: "#FFFFFF" }}>
               <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1.5 }}>
                 <WarningAmberRoundedIcon sx={{ color: "#B9685D" }} />
