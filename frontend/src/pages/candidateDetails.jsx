@@ -15,19 +15,13 @@ import {
 
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import WorkRoundedIcon from "@mui/icons-material/WorkRounded";
-import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
-import BusinessRoundedIcon from "@mui/icons-material/BusinessRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import PsychologyRoundedIcon from "@mui/icons-material/PsychologyRounded";
 import SpeedRoundedIcon from "@mui/icons-material/SpeedRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
-import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
-import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 
 import { colors } from "../theme/theme.js";
-import api from "../services/api.js";
 
 
 function getName(candidate) {
@@ -39,39 +33,6 @@ function getName(candidate) {
     candidate?.personal_info?.name ||
     "Unknown Candidate"
   );
-}
-
-
-function getRole(candidate) {
-  return (
-    candidate?.current_role ||
-    candidate?.role ||
-    candidate?.job_title ||
-    candidate?.designation ||
-    "Candidate"
-  );
-}
-
-
-function getExperience(candidate) {
-  return (
-    candidate?.total_experience_years ??
-    candidate?.experience_years ??
-    candidate?.total_experience ??
-    candidate?.experience ??
-    "N/A"
-  );
-}
-
-
-function getInitials(name) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word.charAt(0))
-    .join("")
-    .toUpperCase() || "C";
 }
 
 
@@ -308,21 +269,11 @@ function CandidateDetails() {
 
   // Search results contain AI evaluation fields at the top level and
   // the parsed resume under `resume`.
-  const resume =
-    candidateState.resume &&
-    typeof candidateState.resume === "object"
-      ? candidateState.resume
-      : {};
-
-  const candidate = {
-    ...resume,
-    ...candidateState,
-  };
+  // Keep the evaluation payload separate from the resume/profile payload.
+  // This page is intentionally an evaluation-only view.
+  const candidate = candidateState;
 
   const name = getName(candidate);
-  const role = getRole(candidate);
-  const experience = getExperience(candidate);
-  const initials = getInitials(name);
 
   const score = Number(candidate.overall_score ?? 0);
   const semanticScore = Number(candidate.semantic_score ?? 0);
@@ -342,18 +293,6 @@ function CandidateDetails() {
     candidate._contextual_total_time ??
     candidate.contextual_total_time ??
     "N/A";
-
-  const openResume = () => {
-    if (!candidate.resume_file) return;
-
-    const baseURL =
-      api.defaults.baseURL || "http://127.0.0.1:8000";
-
-    const resumeURL =
-      `${baseURL}/resume/${encodeURIComponent(candidate.resume_file)}`;
-
-    window.open(resumeURL, "_blank", "noopener,noreferrer");
-  };
 
   const recommendation = candidate.recommendation || "Under Review";
   const recommendationColor =
@@ -454,38 +393,18 @@ function CandidateDetails() {
                   {role}
                 </Typography>
 
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  useFlexGap
-                  flexWrap="wrap"
-                  sx={{ mt: 2 }}
+                <Typography
+                  sx={{
+                    mt: 1.5,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#8A95A1",
+                  }}
                 >
-                  <Chip
-                    icon={<WorkRoundedIcon />}
-                    label={`${experience} experience`}
-                    size="small"
-                    sx={{ fontWeight: 700, background: "#F1F4F7" }}
-                  />
-
-                  {candidate.current_company && (
-                    <Chip
-                      icon={<BusinessRoundedIcon />}
-                      label={candidate.current_company}
-                      size="small"
-                      sx={{ fontWeight: 700, background: "#F1F4F7" }}
-                    />
-                  )}
-
-                  {candidate.location && (
-                    <Chip
-                      icon={<LocationOnRoundedIcon />}
-                      label={candidate.location}
-                      size="small"
-                      sx={{ fontWeight: 700, background: "#F1F4F7" }}
-                    />
-                  )}
-                </Stack>
+                  AI Candidate Evaluation
+                </Typography>
               </Box>
 
               <Box sx={{ textAlign: { xs: "left", md: "right" } }}>
@@ -741,90 +660,6 @@ function CandidateDetails() {
           </Section>
         </Box>
 
-        {/* Supporting resume information */}
-        <Box sx={{ mb: 2.5 }}>
-          <Section
-            icon={<DescriptionRoundedIcon fontSize="small" />}
-            title="Supporting Candidate Profile"
-          >
-            <Stack spacing={2}>
-              {candidate.summary && (
-                <Box>
-                  <Typography sx={{ fontSize: 11, fontWeight: 800, color: "#7C8995", textTransform: "uppercase" }}>
-                    Summary
-                  </Typography>
-                  <Typography sx={{ mt: 0.5, fontSize: 14, lineHeight: 1.7, color: "#52606D" }}>
-                    {candidate.summary}
-                  </Typography>
-                </Box>
-              )}
-
-              {candidate.education && (
-                <Box>
-                  <Typography sx={{ fontSize: 11, fontWeight: 800, color: "#7C8995", textTransform: "uppercase" }}>
-                    Education
-                  </Typography>
-                  <Typography sx={{ mt: 0.5, fontSize: 14, lineHeight: 1.7, color: "#52606D" }}>
-                    {toArray(candidate.education)
-                      .map((item) =>
-                        typeof item === "string"
-                          ? item
-                          : item?.degree ||
-                            item?.course ||
-                            item?.qualification ||
-                            JSON.stringify(item)
-                      )
-                      .join(" • ")}
-                  </Typography>
-                </Box>
-              )}
-
-              {candidate.skills && (
-                <Box>
-                  <Typography sx={{ fontSize: 11, fontWeight: 800, color: "#7C8995", textTransform: "uppercase", mb: 0.7 }}>
-                    Skills
-                  </Typography>
-
-                  <Stack direction="row" spacing={0.8} useFlexGap flexWrap="wrap">
-                    {toArray(candidate.skills).map((skill, index) => (
-                      <Chip
-                        key={index}
-                        size="small"
-                        label={
-                          typeof skill === "string"
-                            ? skill
-                            : skill?.name || JSON.stringify(skill)
-                        }
-                        sx={{
-                          background: "#F2F5F8",
-                          border: "1px solid #DCE2E8",
-                          fontWeight: 600,
-                        }}
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-
-              {candidate.resume_file && (
-                <Box>
-                  <Button
-                    variant="outlined"
-                    startIcon={<DescriptionRoundedIcon />}
-                    onClick={openResume}
-                    sx={{
-                      textTransform: "none",
-                      fontWeight: 700,
-                      borderRadius: 2,
-                    }}
-                  >
-                    Open Original Resume
-                  </Button>
-                </Box>
-              )}
-            </Stack>
-          </Section>
-        </Box>
       </Container>
     </Box>
   );
