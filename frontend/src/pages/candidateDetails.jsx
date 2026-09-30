@@ -20,6 +20,7 @@ import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import PsychologyRoundedIcon from "@mui/icons-material/PsychologyRounded";
 import SpeedRoundedIcon from "@mui/icons-material/SpeedRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
+import WorkRoundedIcon from "@mui/icons-material/WorkRounded";
 
 import { colors } from "../theme/theme.js";
 
