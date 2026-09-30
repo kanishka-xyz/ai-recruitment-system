@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Card,
-  Chip,
   Collapse,
   Container,
   Divider,
@@ -616,27 +615,6 @@ function CandidateDetails() {
               </Box>
             </Box>
 
-              <Grid item xs={12} md={6}>
-                <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 900, color: "#A54E4E" }}>
-                  Gaps
-                </Typography>
-                <BulletGroup items={candidate.gaps} limit={20} />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography sx={{ mt: 2, mb: 1, fontSize: 14, fontWeight: 900, color: "#566675" }}>
-                  Compensating factors
-                </Typography>
-                <BulletGroup items={candidate.compensating_factors} positive limit={20} />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Typography sx={{ mt: 2, mb: 1, fontSize: 14, fontWeight: 900, color: "#A54E4E" }}>
-                  Critical requirements missing
-                </Typography>
-                <BulletGroup items={candidate.critical_requirements_missing} limit={20} />
-              </Grid>
-            </Grid>
           </Collapsible>
 
           <Collapsible
