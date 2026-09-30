@@ -107,12 +107,12 @@ function CandidateProfile() {
         </Box>
       </Card>
 
-      <Box sx={{display:"grid",gridTemplateColumns:{xs:"1fr",md:"1fr 1fr"},gap:2}}>
+      <Box sx={{display:"grid",gridTemplateColumns:{xs:"1fr",md:"1fr 1fr"},gap:2,alignItems:"stretch"}}>
         <Section full icon={<CodeRoundedIcon/>} title="Skills">{skills.length ? <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1}>{skills.map((x,i)=><Chip key={i} label={x} sx={{fontSize:14,fontWeight:650,color:"#29445D",background:"#F0F4F8",border:"1px solid #DCE5EC"}}/>)}</Stack> : <Typography sx={{color:"#52606D"}}>No technical skills available.</Typography>}</Section>
         <Section icon={<SchoolRoundedIcon/>} title="Education">{education.length ? <Stack spacing={1.2}>{education.map((x,i)=><Typography key={i} sx={{fontSize:15,lineHeight:1.65,fontWeight:650,color:"#263440"}}>{x}</Typography>)}</Stack> : <Typography sx={{color:"#52606D"}}>Education information not available.</Typography>}</Section>
-        <Section full icon={<WorkspacePremiumRoundedIcon/>} title={certifications.length ? "Certifications (" + certifications.length + ")" : "Certifications"}>
+        <Section icon={<WorkspacePremiumRoundedIcon/>} title={certifications.length ? "Certifications (" + certifications.length + ")" : "Certifications"}>
   {certifications.length ? (
-    <Box sx={{display:"grid",gridTemplateColumns:{xs:"1fr",sm:"1fr 1fr",lg:"1fr 1fr 1fr"},gap:1.5}}>
+    <Box sx={{display:"grid",gridTemplateColumns:{xs:"1fr",sm:"1fr"},gap:1.5}}>
       {certifications.map((x,i)=>(
         <Box key={"cert-"+i} sx={{minWidth:0,p:1.7,border:"1px solid #DCE5EC",borderRadius:2,background:"#F7F9FB",display:"flex",alignItems:"flex-start",gap:1.2}}>
           <Box sx={{width:30,height:30,borderRadius:"50%",background:"#E8F0F7",color:"#607A96",display:"grid",placeItems:"center",flexShrink:0}}>
