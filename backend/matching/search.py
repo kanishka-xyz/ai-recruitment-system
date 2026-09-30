@@ -613,6 +613,14 @@ def search_candidates(jd_json):
         - contextual_start
     )
 
+    # Expose the same aggregate timing to the frontend so the
+    # evaluation page can show the actual contextual evaluation duration.
+    for result in results:
+        result["_contextual_total_time"] = round(
+            contextual_elapsed,
+            2
+        )
+
     print()
     print("-" * 70)
 
