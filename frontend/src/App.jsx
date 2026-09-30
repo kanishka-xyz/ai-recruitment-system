@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // Pages
-import Dashboard from "./pages/dashboard.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 import Results from "./pages/Results.jsx";
 import CandidateDetails from "./pages/CandidateDetails.jsx";
 import CandidateProfile from "./pages/CandidateProfile.jsx";
-import Candidates from "./pages/candidates.jsx";
+import Candidates from "./pages/Candidates.jsx";
 import ResumeDatabase from "./pages/ResumeDatabase.jsx";
 
 function App() {
