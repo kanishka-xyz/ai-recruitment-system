@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/dashboard.jsx";
 import Results from "./pages/Results.jsx";
 import CandidateDetails from "./pages/CandidateDetails.jsx";
+import CandidateProfile from "./pages/CandidateProfile.jsx";
 import Candidates from "./pages/candidates.jsx";
 import ResumeDatabase from "./pages/ResumeDatabase.jsx";
 
@@ -27,6 +28,12 @@ function App() {
         {/* Candidate Profile */}
         <Route
           path="/candidate"
+          element={<CandidateProfile />}
+        />
+
+        {/* AI Candidate Evaluation */}
+        <Route
+          path="/candidate-evaluation"
           element={<CandidateDetails />}
         />
 
