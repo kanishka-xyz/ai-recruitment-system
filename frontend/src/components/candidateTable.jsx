@@ -226,7 +226,7 @@ function CandidateTable({ candidates = [], analysis = {} }) {
                     variant="outlined"
                     startIcon={<VisibilityRoundedIcon />}
                     onClick={() => {
-                      navigate("/candidate", {
+                      navigate("/candidate-evaluation", {
                         state: { ...candidate, job_analysis: analysis },
                       });
                     }}
