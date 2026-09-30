@@ -11,8 +11,31 @@ import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import WorkRoundedIcon from "@mui/icons-material/WorkRounded";
 import { colors } from "../theme/theme.js";
 
-const arr = (v) => !v ? [] : Array.isArray(v) ? v : [v];
-const text = (v) => typeof v === "string" ? v : (v?.name || v?.description || v?.degree || v?.course || v?.title || v?.text || "");
+const arr = (v) => {
+  if (!v) return [];
+  if (Array.isArray(v)) return v.flat(Infinity);
+  if (typeof v === "string") {
+    return v.split(/\\n|\\r|;|(?<=\\.)\\s+(?=[A-Z])/).map((x) => x.trim()).filter(Boolean);
+  }
+  return [v];
+};
+const text = (v) => {
+  if (typeof v === "string") return v.trim();
+  if (!v || typeof v !== "object") return "";
+  return (
+    v.name ||
+    v.certification ||
+    v.certification_name ||
+    v.certificate ||
+    v.certificate_name ||
+    v.course ||
+    v.title ||
+    v.degree ||
+    v.description ||
+    v.text ||
+    ""
+  ).toString().trim();
+};
 const nameOf = (c) => c?.candidate_name || c?.name || c?.full_name || c?.candidate || c?.personal_info?.name || "Unknown Candidate";
 const roleOf = (c) => c?.current_role || c?.designation || c?.job_title || c?.title || c?.role || "Candidate";
 
@@ -47,7 +70,26 @@ function CandidateProfile() {
 
   return <Box sx={{ minHeight:"100vh", background:"#F5F7F9", py:{xs:2,md:4} }}>
     <Container maxWidth="lg" sx={{ px:{xs:2,md:3} }}>
-      <Button startIcon={<ArrowBackRoundedIcon />} onClick={()=>navigate(-1)} sx={{ mb:2, color:"#4D6276", fontWeight:800, textTransform:"none" }}>Back to Candidates</Button>
+      <Button
+  startIcon={<ArrowBackRoundedIcon />}
+  onClick={()=>navigate(-1)}
+  variant="outlined"
+  sx={{
+    mb:2.5,
+    px:2,
+    py:1,
+    borderRadius:2,
+    borderColor:"#C9D4DE",
+    background:"#FFFFFF",
+    color:"#30465A",
+    fontWeight:800,
+    textTransform:"none",
+    fontSize:14,
+    "&:hover":{borderColor:colors.brass,background:"#FAFBFC"}
+  }}
+>
+  Back to Candidates
+</Button>
 
       <Card elevation={0} sx={{ border:"1px solid #D3DCE4", borderRadius:3, overflow:"hidden", mb:2.5, background:"#FFF" }}>
         <Box sx={{ height:6, background:colors.brass }} />
@@ -68,7 +110,22 @@ function CandidateProfile() {
       <Box sx={{display:"grid",gridTemplateColumns:{xs:"1fr",md:"1fr 1fr"},gap:2}}>
         <Section full icon={<CodeRoundedIcon/>} title="Skills">{skills.length ? <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1}>{skills.map((x,i)=><Chip key={i} label={x} sx={{fontSize:14,fontWeight:650,color:"#29445D",background:"#F0F4F8",border:"1px solid #DCE5EC"}}/>)}</Stack> : <Typography sx={{color:"#52606D"}}>No technical skills available.</Typography>}</Section>
         <Section icon={<SchoolRoundedIcon/>} title="Education">{education.length ? <Stack spacing={1.2}>{education.map((x,i)=><Typography key={i} sx={{fontSize:15,lineHeight:1.65,fontWeight:650,color:"#263440"}}>{x}</Typography>)}</Stack> : <Typography sx={{color:"#52606D"}}>Education information not available.</Typography>}</Section>
-        <Section icon={<WorkspacePremiumRoundedIcon/>} title="Certifications">{certifications.length ? <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1}>{certifications.map((x,i)=><Chip key={i} label={x} sx={{fontSize:14,color:"#29445D",background:"#F0F4F8",border:"1px solid #DCE5EC"}}/>)}</Stack> : <Typography sx={{color:"#52606D"}}>No certifications available.</Typography>}</Section>
+        <Section full icon={<WorkspacePremiumRoundedIcon/>} title={certifications.length ? "Certifications (" + certifications.length + ")" : "Certifications"}>
+  {certifications.length ? (
+    <Box sx={{display:"grid",gridTemplateColumns:{xs:"1fr",sm:"1fr 1fr",lg:"1fr 1fr 1fr"},gap:1.5}}>
+      {certifications.map((x,i)=>(
+        <Box key={"cert-"+i} sx={{minWidth:0,p:1.7,border:"1px solid #DCE5EC",borderRadius:2,background:"#F7F9FB",display:"flex",alignItems:"flex-start",gap:1.2}}>
+          <Box sx={{width:30,height:30,borderRadius:"50%",background:"#E8F0F7",color:"#607A96",display:"grid",placeItems:"center",flexShrink:0}}>
+            <WorkspacePremiumRoundedIcon sx={{fontSize:17}}/>
+          </Box>
+          <Typography sx={{fontSize:14,lineHeight:1.5,fontWeight:700,color:"#29445D",overflowWrap:"anywhere",wordBreak:"break-word"}}>
+            {x}
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  ) : <Typography sx={{color:"#52606D"}}>No certifications available.</Typography>}
+</Section>
         <Section full icon={<FolderRoundedIcon/>} title="Projects">{projects.length ? <Stack spacing={1.2}>{projects.map((x,i)=><Box key={i} sx={{p:1.3,borderRadius:2,background:"#F7F9FB"}}><Typography sx={{fontSize:15,color:"#263440",fontWeight:650}}>{x}</Typography></Box>)}</Stack> : <Typography sx={{color:"#52606D"}}>No projects available.</Typography>}</Section>
         <Section full icon={<WorkRoundedIcon/>} title="Experience">{experienceItems.length ? <Stack spacing={1.2}>{experienceItems.map((x,i)=><Typography key={i} sx={{fontSize:15,lineHeight:1.65,color:"#263440",fontWeight:600}}>{x}</Typography>)}</Stack> : <Typography sx={{color:"#52606D"}}>Experience details not available.</Typography>}</Section>
         <Section full icon={<DescriptionRoundedIcon/>} title="Resume"><Box sx={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:2,flexWrap:"wrap"}}><Box><Typography sx={{fontSize:15,fontWeight:800,color:"#263440"}}>{resumeFile || "Resume file not available"}</Typography><Typography sx={{mt:.4,fontSize:13,color:"#63717E"}}>Source: internal database</Typography></Box>{resumeFile && <Button onClick={openResume} variant="contained" startIcon={<DescriptionRoundedIcon/>} sx={{textTransform:"none",fontWeight:800,borderRadius:2,background:"#6B87A3"}}>Open Resume</Button>}</Box></Section>
