@@ -16,8 +16,15 @@ STATUS_VALUES = {
 
 AUTHENTICITY_ALLOWED_EXTENSIONS = {".pdf", ".docx"}
 
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+BACKEND_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+PROJECT_ROOT = os.path.abspath(os.path.join(BACKEND_ROOT, ".."))
+
+# The existing application uses relative storage paths. Depending on where
+# Uvicorn is started, those paths resolve either from the repository root or
+# from the backend directory. Keep both locations in the approved roots.
 RESUME_ROOTS = [
+    os.path.abspath(os.path.join(BACKEND_ROOT, "internal_database", "resumes")),
+    os.path.abspath(os.path.join(BACKEND_ROOT, "uploads")),
     os.path.abspath(os.path.join(PROJECT_ROOT, "internal_database", "resumes")),
     os.path.abspath(os.path.join(PROJECT_ROOT, "uploads")),
 ]
@@ -99,7 +106,14 @@ def resolve_resume_path(resume):
 
     candidates = []
     if raw_path:
-        candidates.append(os.path.abspath(raw_path))
+        # Resolve the stored relative path against both common application
+        # working directories before falling back to filename-based lookup.
+        if os.path.isabs(raw_path):
+            candidates.append(os.path.abspath(raw_path))
+        else:
+            candidates.append(os.path.abspath(raw_path))
+            candidates.append(os.path.abspath(os.path.join(BACKEND_ROOT, raw_path.lstrip("/\\\")))
+            candidates.append(os.path.abspath(os.path.join(PROJECT_ROOT, raw_path.lstrip("/\\\"))))
 
     for root in RESUME_ROOTS:
         if filename:
