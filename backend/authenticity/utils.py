@@ -112,8 +112,9 @@ def resolve_resume_path(resume):
             candidates.append(os.path.abspath(raw_path))
         else:
             candidates.append(os.path.abspath(raw_path))
-            candidates.append(os.path.abspath(os.path.join(BACKEND_ROOT, raw_path.lstrip("/\\\")))
-            candidates.append(os.path.abspath(os.path.join(PROJECT_ROOT, raw_path.lstrip("/\\\"))))
+            clean_path = raw_path.lstrip("/\\")
+            candidates.append(os.path.abspath(os.path.join(BACKEND_ROOT, clean_path)))
+            candidates.append(os.path.abspath(os.path.join(PROJECT_ROOT, clean_path)))
 
     for root in RESUME_ROOTS:
         if filename:
