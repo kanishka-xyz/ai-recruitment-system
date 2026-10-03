@@ -26,10 +26,24 @@ def analyze_ai_assisted_content(resume, resume_text):
     client = genai.Client(api_key=api_key)
 
     redacted_text = redact_pii(resume_text)
+    allowed_fields = {
+        "current_role",
+        "total_experience_years",
+        "skills",
+        "technical_skills",
+        "soft_skills",
+        "education",
+        "certifications",
+        "projects",
+        "industries",
+        "tools",
+        "programming_languages",
+        "summary",
+    }
     structured = {
         key: value
         for key, value in resume.items()
-        if key not in {"embedding", "resume_text", "resume_path"}
+        if key in allowed_fields
     }
 
     prompt = """
