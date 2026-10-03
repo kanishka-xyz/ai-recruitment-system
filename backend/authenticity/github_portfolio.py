@@ -58,6 +58,24 @@ def _check_http_url(url):
         return {"status": "Unverified", "evidence": [f"URL could not be reached: {exc}"]}
 
 
+def _github_readme(owner, repo):
+    try:
+        status, payload = _github_request(f"/repos/{quote(owner)}/{quote(repo)}/readme")
+        if status != 200:
+            return {"available": False}
+        encoded = payload.get("content") or ""
+        import base64
+        content = base64.b64decode(encoded).decode("utf-8", errors="replace")
+        return {
+            "available": True,
+            "name": payload.get("name"),
+            "html_url": payload.get("html_url"),
+            "content_excerpt": content[:4000],
+        }
+    except Exception as exc:
+        return {"available": False, "error": str(exc)}
+
+
 def _github_repo_details(owner, repo):
     status, payload = _github_request(f"/repos/{quote(owner)}/{quote(repo)}")
     if status != 200:
@@ -67,6 +85,8 @@ def _github_repo_details(owner, repo):
         _, languages = _github_request(f"/repos/{quote(owner)}/{quote(repo)}/languages")
     except Exception:
         languages = {}
+
+    readme = _github_readme(owner, repo)
 
     return {
         "full_name": payload.get("full_name"),
@@ -79,6 +99,7 @@ def _github_repo_details(owner, repo):
         "languages": sorted(languages.keys()),
         "topics": payload.get("topics") or [],
         "stargazers_count": payload.get("stargazers_count", 0),
+        "readme": readme,
     }
 
 
@@ -162,6 +183,7 @@ def analyze_github_portfolio(resume, resume_text):
                             f"Repository URL: {details.get('html_url')}",
                             f"Public languages: {', '.join(details.get('languages') or []) or 'None reported'}",
                             f"Technology overlap with resume claims: {', '.join(overlap) if overlap else 'No direct language overlap found'}",
+                            f"README available: {'yes' if details.get('readme', {}).get('available') else 'no'}",
                         ],
                         0.93,
                         "Remember that public repository access does not by itself prove authorship or ownership by the candidate.",
