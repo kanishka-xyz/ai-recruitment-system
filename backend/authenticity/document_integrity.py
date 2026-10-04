@@ -170,11 +170,11 @@ def _analyze_pdf(file_path):
         findings.append(
             create_finding(
                 "document_integrity",
-                "Potentially Inconsistent",
-                "The PDF contains embedded files.",
+                "Unverified",
+                "The PDF contains embedded content that may be part of the original resume.",
                 [f"Embedded files: {', '.join(embedded_names[:10])}"],
                 0.65,
-                "Review embedded content and confirm it is expected for the resume.",
+                "Quickly review the embedded content if needed.",
             )
         )
 
