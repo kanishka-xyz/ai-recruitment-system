@@ -6,7 +6,6 @@ from google import genai
 from .utils import create_finding, redact_pii
 
 ALLOWED_FINDING_STATUSES = {
-    "Potentially Inconsistent",
     "Unverified",
     "Not Checked",
 }
@@ -114,16 +113,12 @@ Rules:
             )
         )
 
-    status = (
-        "Potentially Inconsistent"
-        if any(item["status"] == "Potentially Inconsistent" for item in findings)
-        else "Unverified" if findings else "Verified"
-    )
+    status = "Unverified" if findings else "Verified"
 
     return {
         "status": status,
         "summary": (
-            "Gemini found one or more content-consistency signals for human review."
+            "Gemini found one or more items that may be worth a quick review."
             if findings
             else "Gemini did not identify a concrete content-consistency issue in this run."
         ),
