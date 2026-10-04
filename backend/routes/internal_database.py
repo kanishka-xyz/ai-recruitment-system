@@ -57,6 +57,111 @@ def calculate_file_hash(file_path):
 
 
 # ============================================================
+# FILE / FOLDER UPLOAD
+# ============================================================
+
+@router.post("/uploadResumeFiles")
+async def upload_resume_files(
+    files: list[UploadFile] = File(...)
+):
+    """
+    Upload one or more PDF/DOCX resumes directly.
+
+    The frontend also uses this endpoint for folder selection. Browsers
+    submit every supported file in the selected folder as a multipart file.
+    """
+    start_time = time.perf_counter()
+
+    if not files:
+        return {
+            "success": False,
+            "message": "No resume files selected."
+        }
+
+    uploaded_files = []
+    rejected_files = []
+
+    try:
+        for upload in files:
+            original_name = os.path.basename(upload.filename or "")
+            extension = os.path.splitext(original_name)[1].lower()
+
+            if not original_name:
+                rejected_files.append({
+                    "filename": "",
+                    "error": "Missing filename."
+                })
+                continue
+
+            if extension not in ALLOWED_EXTENSIONS:
+                rejected_files.append({
+                    "filename": original_name,
+                    "error": "Only PDF and DOCX files are supported."
+                })
+                continue
+
+            destination = os.path.join(
+                INTERNAL_RESUME_FOLDER,
+                original_name
+            )
+
+            # Avoid overwriting an existing resume with the same filename.
+            if os.path.exists(destination):
+                base, ext = os.path.splitext(original_name)
+                counter = 1
+
+                while os.path.exists(destination):
+                    new_filename = f"{base}_{counter}{ext}"
+                    destination = os.path.join(
+                        INTERNAL_RESUME_FOLDER,
+                        new_filename
+                    )
+                    counter += 1
+
+                stored_filename = new_filename
+            else:
+                stored_filename = original_name
+
+            with open(destination, "wb") as target:
+                shutil.copyfileobj(upload.file, target)
+
+            uploaded_files.append(stored_filename)
+
+        sync_result = sync_internal_database()
+
+        elapsed = time.perf_counter() - start_time
+
+        return {
+            "success": True,
+            "message": (
+                "Resume files uploaded and synchronized successfully."
+            ),
+            "uploaded_files": uploaded_files,
+            "uploaded_count": len(uploaded_files),
+            "rejected_count": len(rejected_files),
+            "rejected": rejected_files,
+            "processed_count": sync_result["processed_count"],
+            "skipped_count": sync_result["skipped_count"],
+            "failed_count": sync_result["failed_count"],
+            "processed": sync_result["processed"],
+            "skipped": sync_result["skipped"],
+            "failed": sync_result["failed"],
+            "processing_time": round(elapsed, 2),
+        }
+
+    except Exception as exc:
+        print(f"❌ Direct resume upload failed: {exc}")
+
+        return {
+            "success": False,
+            "message": "Resume file upload failed.",
+            "error": str(exc),
+            "uploaded_files": uploaded_files,
+            "rejected": rejected_files,
+        }
+
+
+# ============================================================
 # ZIP UPLOAD
 # ============================================================
 
