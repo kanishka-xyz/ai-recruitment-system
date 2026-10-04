@@ -177,15 +177,15 @@ def analyze_employment_timeline(resume, resume_text):
             findings.append(
                 create_finding(
                     "employment_timeline",
-                    "Potentially Inconsistent",
-                    "Two reported employment periods overlap.",
+                    "Unverified",
+                    "Some work dates overlap and may need a quick clarification.",
                     [
                         f"{left.get('role') or 'Role'} {left.get('company') or ''}: {left['date_text']}",
                         f"{right.get('role') or 'Role'} {right.get('company') or ''}: {right['date_text']}",
                         f"Overlap length: {months} month(s).",
                     ],
                     0.74,
-                    "Confirm whether the overlap represents concurrent employment, consulting, internship, part-time work, or a data-entry error.",
+                    "Ask the candidate whether the overlap was intentional, such as an internship or part-time role.",
                 )
             )
 
@@ -202,21 +202,21 @@ def analyze_employment_timeline(resume, resume_text):
             findings.append(
                 create_finding(
                     "employment_timeline",
-                    "Potentially Inconsistent",
-                    "Claimed total experience differs materially from the union of the extracted employment ranges.",
+                    "Unverified",
+                    "The experience total is a little different from the listed work dates.",
                     [
                         f"Claimed experience: {claimed_value:.1f} years.",
                         f"Timeline-derived experience: {inferred_union_years:.1f} years.",
                         f"Difference: {discrepancy:.1f} years.",
                     ],
                     0.67,
-                    "Review missing/part-time periods and the source of the claimed experience total.",
+                    "Confirm the total experience with the candidate.",
                 )
             )
 
     status = "Potentially Inconsistent" if findings else "Unverified"
     summary = (
-        "At least one timeline pattern requires human review."
+        "Some dates may need a quick review."
         if findings
         else "Employment dates are internally consistent within what could be extracted, but external verification was not performed."
     )
