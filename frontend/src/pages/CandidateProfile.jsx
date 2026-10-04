@@ -54,6 +54,55 @@ function Section({ icon, title, children, full=false }) {
   </Card>;
 }
 
+function displayStatus(status) {
+  if (status === "Potentially Inconsistent") return "Needs Review";
+  if (status === "Unverified") return "Not Verified Yet";
+  return status || "Not Checked";
+}
+
+function friendlyFinding(finding) {
+  const description = String(finding?.description || "");
+
+  if (/embedded files/i.test(description)) {
+    return "Extra embedded content was found. This can be normal, so just review it.";
+  }
+  if (/overlap/i.test(description)) {
+    return "Some work dates overlap. This can be normal for internships or part-time work.";
+  }
+  if (/experience total|claimed total experience/i.test(description)) {
+    return "The experience total is a little different from the listed dates.";
+  }
+  if (/could not be independently verified/i.test(description)) {
+    return "This credential could not be verified automatically yet.";
+  }
+  if (/educational timeline contradiction/i.test(description)) {
+    return "The education and experience dates may need a quick clarification.";
+  }
+  if (/content-consistency/i.test(description)) {
+    return "There may be a small content mismatch worth checking.";
+  }
+
+  return description;
+}
+
+function friendlyAction(finding) {
+  const description = String(finding?.description || "");
+
+  if (/embedded files/i.test(description)) {
+    return "Check that the embedded content is expected.";
+  }
+  if (/overlap/i.test(description)) {
+    return "Ask whether the overlapping work was intentional.";
+  }
+  if (/experience total|claimed total experience/i.test(description)) {
+    return "Confirm the total experience with the candidate.";
+  }
+  if (/could not be independently verified/i.test(description)) {
+    return "Verify it later through the issuing institution or approved service.";
+  }
+  return String(finding?.recommended_action || "Review this item with the candidate.");
+}
+
 function authenticityTone(status) {
   if (status === "Verified") {
     return { color: "#247354", background: "#EAF6F0", border: "#CBE5D8", icon: <CheckCircleRoundedIcon sx={{ fontSize: 18 }} /> };
@@ -142,7 +191,7 @@ function AuthenticitySection({ resumeId }) {
             <Box>
               <Typography sx={{ fontSize: 18, fontWeight: 900, color: "#17212B" }}>Resume Authenticity</Typography>
               <Typography sx={{ mt: .35, fontSize: 13, color: "#65717C" }}>
-                Evidence-based review signals separate from ATS fit and ranking.
+                Simple checks to help HR decide what may need a quick review.
               </Typography>
             </Box>
           </Box>
@@ -172,7 +221,7 @@ function AuthenticitySection({ resumeId }) {
           <Box sx={{ p: 2.5, borderRadius: 2.5, background: "#F7F9FB", border: "1px solid #E1E7EC" }}>
             <Typography sx={{ fontWeight: 850, color: "#263440" }}>No authenticity report yet</Typography>
             <Typography sx={{ mt: .5, fontSize: 14, lineHeight: 1.6, color: "#64717D" }}>
-              Run the analysis to inspect document integrity, duplicate/content overlap, timeline consistency, credentials, public links and AI-assisted content signals.
+              Run the analysis to review the resume for a few common consistency and verification signals.
             </Typography>
           </Box>
         ) : (
@@ -180,7 +229,7 @@ function AuthenticitySection({ resumeId }) {
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.2, flexWrap: "wrap", mb: 2 }}>
               <Chip
                 icon={overallStyle.icon}
-                label={overall}
+                label={displayStatus(overall)}
                 sx={{ fontWeight: 850, color: overallStyle.color, background: overallStyle.background, border: `1px solid ${overallStyle.border}` }}
               />
               <Typography sx={{ fontSize: 12.5, color: "#71808D" }}>
@@ -197,28 +246,44 @@ function AuthenticitySection({ resumeId }) {
                   <Box key={key} sx={{ p: 2, border: "1px solid #E0E6EB", borderRadius: 2.5, background: "#FBFCFD" }}>
                     <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
                       <Typography sx={{ fontSize: 15, fontWeight: 850, color: "#263440" }}>{label}</Typography>
-                      <Chip icon={style.icon} label={check.status || "Not Checked"} size="small" sx={{ fontWeight: 800, color: style.color, background: style.background, border: `1px solid ${style.border}` }} />
+                      <Chip icon={style.icon} label={displayStatus(check.status)} size="small" sx={{ fontWeight: 800, color: style.color, background: style.background, border: `1px solid ${style.border}` }} />
                     </Box>
                     <Typography sx={{ mt: .8, fontSize: 13.5, lineHeight: 1.6, color: "#526270" }}>
                       {check.summary || "No summary available."}
                     </Typography>
                     {categoryFindings.length > 0 && (
                       <Stack spacing={1} sx={{ mt: 1.2 }}>
-                        {categoryFindings.slice(0, 5).map((finding, index) => (
-                          <Box key={index} sx={{ p: 1.3, borderRadius: 2, background: "#FFFFFF", border: "1px solid #E5E9ED" }}>
-                            <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: "#303D48" }}>{finding.description}</Typography>
-                            {finding.evidence?.length > 0 && (
-                              <Typography sx={{ mt: .45, fontSize: 12.5, lineHeight: 1.55, color: "#62707C" }}>
-                                Evidence: {finding.evidence.join(" • ")}
-                              </Typography>
-                            )}
-                            {finding.recommended_action && (
-                              <Typography sx={{ mt: .45, fontSize: 12.5, lineHeight: 1.55, color: "#526270" }}>
-                                HR follow-up: {finding.recommended_action}
-                              </Typography>
-                            )}
-                          </Box>
-                        ))}
+                        {(() => {
+                          const finding = categoryFindings[0];
+                          const extraCount = Math.max(0, categoryFindings.length - 1);
+                          const evidence = finding.evidence?.[0];
+
+                          return (
+                            <>
+                              <Box sx={{ p: 1.3, borderRadius: 2, background: "#FFFFFF", border: "1px solid #E5E9ED" }}>
+                                <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: "#303D48" }}>
+                                  {friendlyFinding(finding)}
+                                </Typography>
+
+                                {evidence && (
+                                  <Typography sx={{ mt: .45, fontSize: 12.5, lineHeight: 1.55, color: "#62707C" }}>
+                                    {evidence}
+                                  </Typography>
+                                )}
+
+                                <Typography sx={{ mt: .45, fontSize: 12.5, lineHeight: 1.55, color: "#526270" }}>
+                                  Suggested check: {friendlyAction(finding)}
+                                </Typography>
+                              </Box>
+
+                              {extraCount > 0 && (
+                                <Typography sx={{ fontSize: 12.5, color: "#7A8792" }}>
+                                  +{extraCount} more item{extraCount > 1 ? "s" : ""} found. Open the detailed report for the full list.
+                                </Typography>
+                              )}
+                            </>
+                          );
+                        })()}
                       </Stack>
                     )}
                   </Box>
@@ -228,7 +293,7 @@ function AuthenticitySection({ resumeId }) {
 
             {(report.recommended_actions || []).length > 0 && (
               <Box sx={{ mt: 2, p: 2, borderRadius: 2.5, background: "#F5F8FA", border: "1px solid #DFE6EB" }}>
-                <Typography sx={{ fontSize: 14, fontWeight: 900, color: "#304354" }}>Recommended HR verification actions</Typography>
+                <Typography sx={{ fontSize: 14, fontWeight: 900, color: "#304354" }}>Suggested HR Checks</Typography>
                 <Stack spacing={.8} sx={{ mt: 1 }}>
                   {report.recommended_actions.slice(0, 8).map((action, index) => (
                     <Typography key={index} sx={{ fontSize: 13.5, lineHeight: 1.5, color: "#4F606E" }}>
