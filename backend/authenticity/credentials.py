@@ -101,10 +101,10 @@ def _analyze_item(credential, verifier_configured):
     finding = create_finding(
         credential["category"],
         "Unverified",
-        f"{credential['name']} could not be independently verified.",
+        f"{credential['name']} could not be automatically verified yet.",
         [reason],
         0.72,
-        "Verify the credential through the issuing institution or an approved verification service.",
+        "Verify it later through the issuing institution or an approved service.",
     )
     return "Unverified", finding
 
@@ -130,17 +130,6 @@ def analyze_credentials(resume):
         })
         findings.append(finding)
 
-        if credential["category"] == "education" and not credential["institution"]:
-            findings.append(
-                create_finding(
-                    "education",
-                    "Potentially Inconsistent",
-                    f"Education entry '{credential['name']}' does not include an institution name.",
-                    ["Institution field is missing from the parsed resume data."],
-                    0.6,
-                    "Ask the candidate for the awarding institution before verification.",
-                )
-            )
 
     def group_status(items):
         statuses = [item["status"] for item in items]
@@ -168,7 +157,7 @@ def analyze_credentials(resume):
         "summary": (
             "Credentials were checked through the configured authoritative service."
             if verifier_configured
-            else "Credential records were extracted, but no authoritative verification service is configured, so they remain unverified."
+            else "Credential records were found, but automatic verification is not configured yet."
         ),
         "checks": {
             "verification_integration_configured": verifier_configured,
