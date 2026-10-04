@@ -10,11 +10,15 @@ import {
   Container,
   Divider,
   IconButton,
+  ListItemIcon,
+  Menu,
+  MenuItem,
   Stack,
   Typography,
 } from "@mui/material";
 
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
+import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
@@ -62,6 +66,8 @@ function ResumeDatabase() {
   const navigate = useNavigate();
 
   const fileInputRef = useRef(null);
+  const folderInputRef = useRef(null);
+  const [uploadMenuAnchor, setUploadMenuAnchor] = useState(null);
 
   const [resumes, setResumes] = useState([]);
 
@@ -130,94 +136,134 @@ function ResumeDatabase() {
   }, []);
 
 
+
   /* =======================================================
-     UPLOAD ZIP
+     UPLOAD RESUMES — FILES OR FOLDER
   ======================================================= */
 
-  const handleUploadClick = () => {
-
-    fileInputRef.current?.click();
-
+  const handleUploadClick = (event) => {
+    setUploadMenuAnchor(event.currentTarget);
   };
 
+  const closeUploadMenu = () => {
+    setUploadMenuAnchor(null);
+  };
 
-  const handleUpload = async (event) => {
+  const openFilePicker = () => {
+    closeUploadMenu();
+    fileInputRef.current?.click();
+  };
 
-    const file = event.target.files?.[0];
+  const openFolderPicker = () => {
+    closeUploadMenu();
+    folderInputRef.current?.click();
+  };
 
-    if (!file) return;
+  const handleUploadFiles = async (event) => {
+    const files = Array.from(event.target.files || []);
 
+    if (!files.length) return;
 
-    if (!file.name.toLowerCase().endsWith(".zip")) {
+    const supportedFiles = files.filter((file) => {
+      const name = file.name.toLowerCase();
+      return name.endsWith(".pdf") || name.endsWith(".docx");
+    });
 
-      setMessage(
-        "Please select a ZIP file containing PDF or DOCX resumes."
-      );
-
+    if (!supportedFiles.length) {
+      setMessage("Please select PDF or DOCX resume files.");
       event.target.value = "";
-
       return;
     }
 
-
     try {
-
       setUploading(true);
-
-      setMessage("Uploading and processing resumes...");
-
+      setMessage(
+        supportedFiles.length === 1
+          ? "Uploading and processing resume..."
+          : "Uploading and processing " + supportedFiles.length + " resumes..."
+      );
 
       const formData = new FormData();
 
-      formData.append("file", file);
+      supportedFiles.forEach((file) => {
+        formData.append("files", file, file.name);
+      });
 
+      const response = await api.post(
+        "/uploadResumeFiles",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const result = response.data;
+
+      setMessage(
+        result.message ||
+        "Uploaded " +
+        (result.uploaded_count ?? supportedFiles.length) +
+        " resumes successfully."
+      );
+
+      await loadResumes();
+    } catch (error) {
+      console.error("Resume upload failed:", error);
+
+      setMessage(
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Resume upload failed."
+      );
+    } finally {
+      setUploading(false);
+      event.target.value = "";
+    }
+  };
+
+  const handleUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      setMessage("Uploading and processing ZIP resume database...");
+
+      const formData = new FormData();
+      formData.append("file", file);
 
       const response = await api.post(
         "/uploadResumeDatabase",
         formData,
         {
           headers: {
-            "Content-Type":
-              "multipart/form-data",
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
-
       const result = response.data;
-
-
       setMessage(
         result.message ||
-        `Uploaded ${
-          result.uploaded_count ?? 0
-        } resumes successfully.`
+        "Uploaded " +
+        (result.uploaded_count ?? 0) +
+        " resumes successfully."
       );
-
 
       await loadResumes();
-
     } catch (error) {
-
-      console.error(
-        "Resume upload failed:",
-        error
-      );
-
+      console.error("ZIP resume upload failed:", error);
       setMessage(
         error?.response?.data?.detail ||
-        "Resume upload failed."
+        "ZIP resume upload failed."
       );
-
     } finally {
-
       setUploading(false);
-
       event.target.value = "";
-
     }
   };
-
 
   /* =======================================================
      OPEN PDF
@@ -493,6 +539,8 @@ function ResumeDatabase() {
 
             {/* Add Resumes */}
 
+                        {/* Add Resumes */}
+
             <Button
               variant="contained"
               startIcon={
@@ -507,47 +555,95 @@ function ResumeDatabase() {
                   <UploadFileRoundedIcon />
                 )
               }
-
               onClick={handleUploadClick}
-
               disabled={uploading}
-
               sx={{
-                textTransform:
-                  "none",
-
+                textTransform: "none",
                 fontWeight: 750,
-
                 px: 2.2,
                 py: 1.15,
-
                 borderRadius: 2,
-
-                backgroundColor:
-                  colors.brass,
-
+                backgroundColor: colors.brass,
                 boxShadow: "none",
-
                 "&:hover": {
-                  backgroundColor:
-                    colors.brassDark,
-
+                  backgroundColor: colors.brassDark,
                   boxShadow: "none",
                 },
               }}
             >
-              {uploading
-                ? "Processing..."
-                : "Add Resumes"}
+              {uploading ? "Processing..." : "Add Resumes"}
             </Button>
+
+            <Menu
+              anchorEl={uploadMenuAnchor}
+              open={Boolean(uploadMenuAnchor)}
+              onClose={closeUploadMenu}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "right",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+            >
+              <MenuItem onClick={openFilePicker}>
+                <ListItemIcon>
+                  <DescriptionRoundedIcon fontSize="small" />
+                </ListItemIcon>
+                Add Files
+              </MenuItem>
+
+              <MenuItem onClick={openFolderPicker}>
+                <ListItemIcon>
+                  <FolderOpenRoundedIcon fontSize="small" />
+                </ListItemIcon>
+                Add Folder
+              </MenuItem>
+
+              <MenuItem
+                onClick={() => {
+                  closeUploadMenu();
+                  document.getElementById("resume-zip-input")?.click();
+                }}
+              >
+                <ListItemIcon>
+                  <FolderRoundedIcon fontSize="small" />
+                </ListItemIcon>
+                Add ZIP
+              </MenuItem>
+            </Menu>
 
           </Stack>
 
 
-          {/* Hidden ZIP input */}
+          {/* File picker: one or more PDF/DOCX files */}
 
           <input
             ref={fileInputRef}
+            type="file"
+            accept=".pdf,.docx"
+            multiple
+            hidden
+            onChange={handleUploadFiles}
+          />
+
+          {/* Folder picker: all PDF/DOCX files inside the selected folder */}
+
+          <input
+            ref={folderInputRef}
+            type="file"
+            accept=".pdf,.docx"
+            multiple
+            hidden
+            {...{ webkitdirectory: "", directory: "" }}
+            onChange={handleUploadFiles}
+          />
+
+          {/* Previous ZIP workflow */}
+
+          <input
+            id="resume-zip-input"
             type="file"
             accept=".zip"
             hidden
