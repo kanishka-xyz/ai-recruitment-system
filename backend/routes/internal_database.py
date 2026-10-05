@@ -1,7 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
+from bson import ObjectId
 
-from database.mongodb import resume_collection
+from database.mongodb import resume_collection, db
 
 from ai.resume_parser_ai import parse_resume
 from matching.embedding import create_embedding
@@ -808,6 +809,66 @@ def sync_internal_database():
                 elapsed,
                 2
             )
+    }
+
+
+# ============================================================
+# DELETE RESUME FROM INTERNAL DATABASE
+# ============================================================
+
+@router.delete("/internalDatabase/resume/{resume_id}")
+def delete_resume(resume_id: str):
+    """
+    Delete an internal resume record and its stored file.
+
+    The authenticity reports for the deleted resume are removed as well so
+    that the database does not keep stale reports for a deleted candidate.
+    """
+    try:
+        object_id = ObjectId(str(resume_id))
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid resume ID.")
+
+    resume = resume_collection.find_one({
+        "_id": object_id,
+        "source": "internal_database",
+    })
+
+    if not resume:
+        raise HTTPException(
+            status_code=404,
+            detail="Resume not found in the internal database.",
+        )
+
+    filename = os.path.basename(str(resume.get("resume_file") or ""))
+    raw_path = str(resume.get("resume_path") or "")
+    file_path = raw_path if os.path.isfile(raw_path) else os.path.join(
+        INTERNAL_RESUME_FOLDER,
+        filename,
+    )
+
+    if file_path and os.path.isfile(file_path):
+        try:
+            os.remove(file_path)
+        except OSError as exc:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Could not delete the stored resume file: {exc}",
+            )
+
+    resume_collection.delete_one({"_id": object_id})
+
+    try:
+        db["resume_authenticity_reports"].delete_many({
+            "resume_id": object_id
+        })
+    except Exception as exc:
+        print(f"⚠️ Could not remove authenticity reports for {resume_id}: {exc}")
+
+    return {
+        "success": True,
+        "message": f"{filename or 'Resume'} deleted successfully.",
+        "id": str(object_id),
     }
 
 
