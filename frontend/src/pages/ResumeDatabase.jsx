@@ -328,7 +328,7 @@ function ResumeDatabase() {
 
     const filename = resume?.resume_file || "this resume";
     const confirmed = window.confirm(
-      \`Delete "\${filename}" from the resume database? This will also remove its authenticity report.\`
+      `Delete "${filename}" from the resume database? This will also remove its authenticity report.`
     );
 
     if (!confirmed) return;
@@ -338,7 +338,7 @@ function ResumeDatabase() {
       setMessage("Deleting resume...");
 
       const response = await api.delete(
-        \`/internalDatabase/resume/\${encodeURIComponent(resumeId)}\`
+        `/internalDatabase/resume/${encodeURIComponent(resumeId)}`
       );
 
       setMessage(
