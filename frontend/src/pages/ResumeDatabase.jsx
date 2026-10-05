@@ -24,6 +24,7 @@ import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 
@@ -311,6 +312,50 @@ function ResumeDatabase() {
     );
   };
 
+
+
+  /* =======================================================
+     DELETE RESUME
+  ======================================================= */
+
+  const handleDeleteResume = async (resume) => {
+    const resumeId = resume?._id || resume?.id;
+
+    if (!resumeId) {
+      setMessage("This resume cannot be deleted because its ID is missing.");
+      return;
+    }
+
+    const filename = resume?.resume_file || "this resume";
+    const confirmed = window.confirm(
+      \`Delete "\${filename}" from the resume database? This will also remove its authenticity report.\`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setUploading(true);
+      setMessage("Deleting resume...");
+
+      const response = await api.delete(
+        \`/internalDatabase/resume/\${encodeURIComponent(resumeId)}\`
+      );
+
+      setMessage(
+        response.data?.message || "Resume deleted successfully."
+      );
+
+      await loadResumes();
+    } catch (error) {
+      console.error("Resume deletion failed:", error);
+      setMessage(
+        error?.response?.data?.detail ||
+        "Could not delete the resume."
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
 
   /* =======================================================
      SEARCH
@@ -1265,43 +1310,62 @@ function ResumeDatabase() {
                         </Box>
 
 
-                        {/* Open button */}
+                        {/* Actions */}
 
-                        <Button
-                          variant="outlined"
-                          endIcon={
-                            <OpenInNewRoundedIcon />
-                          }
-                          onClick={() =>
-                            openResume(resume)
-                          }
+                        <Stack
+                          direction="row"
+                          spacing={1}
                           sx={{
-                            textTransform:
-                              "none",
-
-                            fontWeight: 700,
-
-                            borderRadius: 2,
-
-                            minWidth: 125,
-
-                            borderColor:
-                              "#D0D8E0",
-
-                            color:
-                              "#53687C",
-
-                            "&:hover": {
-                              borderColor:
-                                colors.brass,
-
-                              backgroundColor:
-                                "#FAF8F3",
-                            },
+                            flexShrink: 0,
+                            alignItems: "center",
                           }}
                         >
-                          Open Resume
-                        </Button>
+                          <Button
+                            variant="outlined"
+                            endIcon={
+                              <OpenInNewRoundedIcon />
+                            }
+                            onClick={() =>
+                              openResume(resume)
+                            }
+                            sx={{
+                              textTransform: "none",
+                              fontWeight: 700,
+                              borderRadius: 2,
+                              minWidth: 125,
+                              borderColor: "#D0D8E0",
+                              color: "#53687C",
+                              "&:hover": {
+                                borderColor: colors.brass,
+                                backgroundColor: "#FAF8F3",
+                              },
+                            }}
+                          >
+                            Open Resume
+                          </Button>
+
+                          <IconButton
+                            aria-label="Delete resume"
+                            title="Delete resume"
+                            onClick={() =>
+                              handleDeleteResume(resume)
+                            }
+                            disabled={uploading}
+                            sx={{
+                              width: 42,
+                              height: 42,
+                              border: "1px solid #E1CFCF",
+                              color: "#A45D5D",
+                              backgroundColor: "#FFF8F8",
+                              "&:hover": {
+                                backgroundColor: "#FFF0F0",
+                                borderColor: "#C78A8A",
+                              },
+                            }}
+                          >
+                            <DeleteOutlineRoundedIcon />
+                          </IconButton>
+                        </Stack>
 
                       </Box>
                     );
